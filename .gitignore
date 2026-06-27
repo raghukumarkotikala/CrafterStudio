@@ -1,0 +1,42 @@
+```
+# Dependencies
+node_modules/
+
+# Build artifacts
+dist/
+.fusebox/
+.tern-port
+.nyc_output/
+coverage/
+lib-cov/
+*.lcov
+
+# Environment variables
+.env
+.env.local
+.env.*
+
+# IDE and editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+
+# Package lock files
+package-lock.json
+
+# Vite specific
+.vite/
+
+```
