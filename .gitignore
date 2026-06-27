@@ -4,39 +4,48 @@ node_modules/
 
 # Build artifacts
 dist/
-.fusebox/
-.tern-port
-.nyc_output/
-coverage/
-lib-cov/
-*.lcov
+build/
+*.js.map
 
-# Environment variables
+# Environment
 .env
 .env.local
 .env.*
 
-# IDE and editor settings
+# Editors
 .vscode/
 .idea/
-*.swp
-*.swo
 
-# Logs
+# Logs and temp files
 *.log
+*.tmp
+*.swp
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Compiled files
+*.o
+*.obj
+*.so
+*.dll
+*.exe
+*.a
 
 # OS generated files
 .DS_Store
 Thumbs.db
 
-# Temporary files
-*.tmp
-*.temp
+# Coverage reports
+coverage/
+htmlcov/
+.coverage
 
-# Package lock files
-package-lock.json
-
-# Vite specific
-.vite/
-
+# Cache directories
+.mypy_cache/
+.pytest_cache/
+.cache/
 ```
