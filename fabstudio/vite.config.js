@@ -1,17 +1,13 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import basicSsl from '@vitejs/plugin-basic-ssl'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), basicSsl()],
   server: {
     host: true,
-    port: 3000,
-    https: {
-      // Force modern TLS protocols and ciphers
-      key: undefined, // Let Vite generate self-signed with modern defaults
-      cert: undefined,
-    },
-    proxy: {}
+    port: 3001,
+    https: true,
   },
   clearScreen: false
 })

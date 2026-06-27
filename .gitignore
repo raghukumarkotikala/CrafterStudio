@@ -10,53 +10,17 @@ build/
 # Environment
 .env
 .env.local
-.env.*
+*.env.*
 
-# Editors
-.vscode/
-.idea/
+# Cache
+.npm/
+.yarn/
+.vite/
 
-# Logs and temp files
+# Logs
 *.log
-*.tmp
-*.swp
 
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# Compiled files
-*.o
-*.obj
-*.so
-*.dll
-*.exe
-*.a
-*.lib
-*.dylib
-*.jar
-*.class
-
-# Coverage
-coverage/
-htmlcov/
-.coverage
-
-# Testing
-.pytest_cache/
-.mypy_cache/
-.nyc_output/
-coverage/lcov-report/
-
-# Distribution / packaging
-.Python
-*.egg-info/
-.installed.cfg
-*.egg
-
-# System files
+# OS generated files
 .DS_Store
 Thumbs.db
 ```
