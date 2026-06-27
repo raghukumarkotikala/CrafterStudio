@@ -34,18 +34,29 @@ __pycache__/
 *.dll
 *.exe
 *.a
+*.lib
+*.dylib
+*.jar
+*.class
 
-# OS generated files
-.DS_Store
-Thumbs.db
-
-# Coverage reports
+# Coverage
 coverage/
 htmlcov/
 .coverage
 
-# Cache directories
-.mypy_cache/
+# Testing
 .pytest_cache/
-.cache/
+.mypy_cache/
+.nyc_output/
+coverage/lcov-report/
+
+# Distribution / packaging
+.Python
+*.egg-info/
+.installed.cfg
+*.egg
+
+# System files
+.DS_Store
+Thumbs.db
 ```
