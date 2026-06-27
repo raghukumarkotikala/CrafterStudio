@@ -6,6 +6,12 @@ export default defineConfig({
   server: {
     host: true,
     port: 3000,
-    https: true
-  }
+    https: {
+      // Force modern TLS protocols and ciphers
+      key: undefined, // Let Vite generate self-signed with modern defaults
+      cert: undefined,
+    },
+    proxy: {}
+  },
+  clearScreen: false
 })
