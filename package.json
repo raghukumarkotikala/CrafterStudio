@@ -1,0 +1,69 @@
+{
+  "name": "crafter",
+  "productName": "Crafter",
+  "version": "1.0.0",
+  "description": "Crafter - laser engraving & cutting design and control studio",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "library": "node scripts/build-library.js",
+    "dist": "npm run library && electron-builder --win --x64",
+    "dist:linux": "npm run library && electron-builder --linux AppImage --x64",
+    "dist:all": "npm run library && electron-builder --win --linux --x64",
+    "dist:dir": "electron-builder --dir"
+  },
+  "author": "Crafter",
+  "homepage": "https://github.com/crafter-laser/crafter",
+  "license": "ISC",
+  "dependencies": {
+    "dxf-parser": "^1.1.2",
+    "imagetracerjs": "^1.2.6",
+    "opentype.js": "^2.0.0",
+    "paper": "^0.12.18",
+    "paperjs-offset": "^2.2.1"
+  },
+  "devDependencies": {
+    "@mdi/svg": "^7.4.47",
+    "@tabler/icons": "^3.47.0",
+    "electron": "^33.4.11",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.crafter.laser",
+    "productName": "Crafter",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "build/icon.png",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "Crafter-Setup-${version}.exe"
+    },
+    "portable": {
+      "artifactName": "Crafter-Portable-${version}.exe"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "icon": "build/icon.png",
+      "category": "Graphics",
+      "artifactName": "Crafter-${version}-x86_64.AppImage"
+    }
+  }
+}

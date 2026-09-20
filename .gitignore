@@ -1,0 +1,14 @@
+node_modules/
+
+# Build output: keep only the Windows installers, not the unpacked folders
+dist/*
+!dist/Crafter-Setup-*.exe
+!dist/Crafter-Portable-*.exe
+
+# Files over GitHub's 100 MB limit — build locally with `npm run dist:linux`
+dist/*.tar.gz
+dist/*.AppImage
+
+npm-debug.log*
+.DS_Store
+Thumbs.db
