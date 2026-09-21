@@ -9,6 +9,7 @@ import { run } from './commands.js';
 import { enableDrop } from './io.js';
 import { openTextDialog, openProfileDialog, openPortChooser } from './dialogs.js';
 import { modalOpen } from './dom.js';
+import { initAI } from './aiui.js';
 
 function boot() {
   initEditor(document.getElementById('canvas'), document.getElementById('ruler-top'), document.getElementById('ruler-left'));
@@ -16,6 +17,7 @@ function boot() {
   hooks.editText = (item, at) => openTextDialog(item, at);
   initPreview(document.getElementById('preview-canvas'));
   initUI();
+  initAI();
   enableDrop(document.getElementById('canvas-wrap'));
   setDirty(false);
 

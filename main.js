@@ -1,5 +1,5 @@
 // Crafter — Electron main process
-const { app, BrowserWindow, Menu, ipcMain, dialog, shell } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, dialog, shell, safeStorage } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { execFile } = require('child_process');
@@ -88,6 +88,16 @@ function buildMenu() {
         { type: 'separator' },
         item('Trace Image…', 'obj.trace'),
         item('Convert Text to Path', 'obj.toPath')
+      ]
+    },
+    {
+      label: 'AI',
+      submenu: [
+        item('Generate Design…', 'ai.panel'),
+        item('Change Selection with AI…', 'ai.assist'),
+        item('Suggest Material Settings…', 'ai.materials'),
+        { type: 'separator' },
+        item('AI Settings…', 'ai.settings')
       ]
     },
     {
@@ -393,6 +403,225 @@ ipcMain.handle('app:confirm', async (e, opts) => {
     detail: opts.detail || ''
   });
   return r.response;
+});
+
+// ---------- AI providers ----------
+// All model traffic goes through the main process: the renderer runs under a strict
+// CSP (default-src 'self'), and the API key must never reach renderer storage.
+const AI_DEFAULTS = {
+  provider: 'anthropic',
+  anthropic: { model: 'claude-sonnet-5', key: '' },
+  openai: { baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o', key: '' },
+  ollama: { host: 'http://localhost:11434', model: '' },
+  maxTokens: 8000
+};
+
+const aiFile = () => path.join(app.getPath('userData'), 'ai.json');
+
+// Keys are encrypted with the OS keyring when one is available (libsecret/Keychain/DPAPI),
+// otherwise merely obscured in a 0600 file — hence the prefix tag.
+function encodeKey(plain) {
+  if (!plain) return '';
+  try {
+    if (safeStorage.isEncryptionAvailable()) return 'enc:' + safeStorage.encryptString(plain).toString('base64');
+  } catch { /* keyring unavailable */ }
+  return 'raw:' + Buffer.from(plain, 'utf8').toString('base64');
+}
+
+function decodeKey(stored) {
+  if (!stored) return '';
+  try {
+    if (stored.startsWith('enc:')) return safeStorage.decryptString(Buffer.from(stored.slice(4), 'base64'));
+    if (stored.startsWith('raw:')) return Buffer.from(stored.slice(4), 'base64').toString('utf8');
+  } catch { /* unreadable — treat as unset */ }
+  return '';
+}
+
+function readAI() {
+  let raw = {};
+  try { raw = JSON.parse(fs.readFileSync(aiFile(), 'utf8')); } catch { /* first run */ }
+  return {
+    ...AI_DEFAULTS,
+    ...raw,
+    anthropic: { ...AI_DEFAULTS.anthropic, ...raw.anthropic },
+    openai: { ...AI_DEFAULTS.openai, ...raw.openai },
+    ollama: { ...AI_DEFAULTS.ollama, ...raw.ollama }
+  };
+}
+
+// The renderer only ever sees whether a key exists, never its value.
+function redact(cfg) {
+  return {
+    provider: cfg.provider,
+    maxTokens: cfg.maxTokens,
+    anthropic: { model: cfg.anthropic.model, hasKey: !!cfg.anthropic.key },
+    openai: { baseUrl: cfg.openai.baseUrl, model: cfg.openai.model, hasKey: !!cfg.openai.key },
+    ollama: { host: cfg.ollama.host, model: cfg.ollama.model },
+    encrypted: (() => { try { return safeStorage.isEncryptionAvailable(); } catch { return false; } })()
+  };
+}
+
+ipcMain.handle('ai:get', async () => redact(readAI()));
+
+ipcMain.handle('ai:set', async (e, patch = {}) => {
+  const cfg = readAI();
+  if (patch.provider) cfg.provider = ['openai', 'ollama', 'anthropic'].includes(patch.provider) ? patch.provider : 'anthropic';
+  if (patch.maxTokens) cfg.maxTokens = Math.min(Math.max(+patch.maxTokens || 0, 256), 32000);
+  for (const name of ['anthropic', 'openai']) {
+    const src = patch[name];
+    if (!src) continue;
+    if (typeof src.model === 'string' && src.model.trim()) cfg[name].model = src.model.trim();
+    if (typeof src.baseUrl === 'string' && name === 'openai') cfg[name].baseUrl = src.baseUrl.trim();
+    // undefined = leave as-is; '' = explicitly clear.
+    if (typeof src.key === 'string') cfg[name].key = src.key ? encodeKey(src.key) : '';
+  }
+  if (patch.ollama) {
+    if (typeof patch.ollama.host === 'string') cfg.ollama.host = patch.ollama.host.trim() || AI_DEFAULTS.ollama.host;
+    if (typeof patch.ollama.model === 'string') cfg.ollama.model = patch.ollama.model.trim();
+  }
+  fs.writeFileSync(aiFile(), JSON.stringify(cfg, null, 2), { encoding: 'utf8', mode: 0o600 });
+  return redact(cfg);
+});
+
+// Ollama model discovery. The HTTP API is preferred — it works whether Ollama runs
+// as a systemd service or a bare `ollama serve`, and it reports per-model capabilities
+// so embedding-only models can be hidden. `ollama list` is the fallback.
+function ollamaListCli() {
+  return new Promise(resolve => {
+    execFile('ollama', ['list'], { timeout: 8000 }, (err, stdout) => {
+      if (err) {
+        resolve({ models: [], source: 'none', error: 'Could not reach Ollama. Start it with “ollama serve”, then refresh.' });
+        return;
+      }
+      // `ollama list` reports no capabilities, so embedding models can only be
+      // spotted by name here.
+      const embedding = /(^|[/\-_])(all-minilm|nomic-embed|mxbai-embed|bge-|gte-|snowflake-arctic-embed|paraphrase-)|embed/i;
+      const models = String(stdout).split(/\r?\n/).slice(1)
+        .map(l => l.trim()).filter(Boolean)
+        .map(l => ({ name: l.split(/\s+/)[0] }))
+        .filter(m => m.name && !embedding.test(m.name));
+      resolve({ models, source: 'cli' });
+    });
+  });
+}
+
+// Embedding models cannot answer a chat request — never offer them.
+function usableForChat(m) {
+  const caps = m.capabilities;
+  if (!Array.isArray(caps) || !caps.length) return true;
+  return caps.includes('completion') || !caps.includes('embedding');
+}
+
+ipcMain.handle('ai:models', async (e, { host } = {}) => {
+  const base = String(host || AI_DEFAULTS.ollama.host).replace(/\/+$/, '');
+  try {
+    const r = await fetch(base + '/api/tags', { signal: AbortSignal.timeout(5000) });
+    if (r.ok) {
+      const body = await readBody(r);
+      const models = (body.models || [])
+        .filter(usableForChat)
+        .map(m => ({ name: m.name, size: m.size, params: m.details && m.details.parameter_size }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+      return { models, source: 'api' };
+    }
+  } catch { /* server not up or not reachable — try the CLI */ }
+  return ollamaListCli();
+});
+
+const aiAborts = new Map();
+ipcMain.handle('ai:cancel', (e, id) => {
+  const c = aiAborts.get(id);
+  if (c) c.abort();
+  return true;
+});
+
+async function readBody(r) {
+  const text = await r.text();
+  try { return JSON.parse(text); } catch { return { _raw: text }; }
+}
+
+function apiError(body, status) {
+  const m = body && (body.error?.message || body.message || body._raw);
+  const detail = typeof m === 'string' && m.trim() ? m.trim().slice(0, 400) : `HTTP ${status}`;
+  if (status === 401 || status === 403) return `Authentication failed (${status}). Check the API key in AI settings. ${detail}`;
+  if (status === 429) return `Rate limited or out of quota (429). ${detail}`;
+  return detail;
+}
+
+async function callProvider(cfg, { system, user, maxTokens }, signal) {
+  const limit = Math.min(Math.max(+maxTokens || cfg.maxTokens, 256), 32000);
+
+  if (cfg.provider === 'openai' || cfg.provider === 'ollama') {
+    const ollama = cfg.provider === 'ollama';
+    // Ollama serves an OpenAI-compatible API under /v1 on its host.
+    const p = ollama
+      ? { baseUrl: String(cfg.ollama.host || AI_DEFAULTS.ollama.host).replace(/\/+$/, '') + '/v1', model: cfg.ollama.model, key: '' }
+      : cfg.openai;
+    const base = String(p.baseUrl || '').replace(/\/+$/, '');
+    if (!base) throw new Error('No base URL set. Open AI settings.');
+    if (ollama && !p.model) throw new Error('No local model selected. Open AI settings and pick one.');
+    const key = decodeKey(p.key);
+    // Local runtimes (Ollama, LM Studio) usually need no key.
+    const local = ollama || /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])/i.test(base);
+    if (!key && !local) throw new Error('No API key set. Open AI settings and add one.');
+    const post = tokenField => fetch(base + '/chat/completions', {
+      method: 'POST',
+      signal,
+      headers: { 'content-type': 'application/json', ...(key ? { authorization: 'Bearer ' + key } : {}) },
+      body: JSON.stringify({
+        model: p.model,
+        [tokenField]: limit,
+        messages: [{ role: 'system', content: system }, { role: 'user', content: user }]
+      })
+    });
+    let r = await post('max_tokens');
+    let body = await readBody(r);
+    // Newer OpenAI reasoning models reject max_tokens and want max_completion_tokens.
+    if (!r.ok && /max_completion_tokens|max_tokens/i.test(apiError(body, r.status))) {
+      r = await post('max_completion_tokens');
+      body = await readBody(r);
+    }
+    if (!r.ok) throw new Error(apiError(body, r.status));
+    const text = body.choices && body.choices[0] && body.choices[0].message && body.choices[0].message.content;
+    if (!text) throw new Error('The model returned an empty response.');
+    return { text, model: body.model || p.model };
+  }
+
+  const p = cfg.anthropic;
+  const key = decodeKey(p.key);
+  if (!key) throw new Error('No API key set. Open AI settings and add one.');
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    signal,
+    headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({ model: p.model, max_tokens: limit, system, messages: [{ role: 'user', content: user }] })
+  });
+  const body = await readBody(r);
+  if (!r.ok) throw new Error(apiError(body, r.status));
+  const text = (body.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+  if (!text) throw new Error('The model returned an empty response.');
+  return { text, model: body.model || p.model };
+}
+
+ipcMain.handle('ai:request', async (e, { id, system, user, maxTokens } = {}) => {
+  const cfg = readAI();
+  const ac = new AbortController();
+  if (id) aiAborts.set(id, ac);
+  const timer = setTimeout(() => ac.abort(), 180000);
+  try {
+    return await callProvider(cfg, { system, user, maxTokens }, ac.signal);
+  } catch (err) {
+    if (err && (err.name === 'AbortError' || /aborted/i.test(err.message || ''))) throw new Error('Cancelled');
+    if (err && /fetch failed|ENOTFOUND|ECONNREFUSED|EAI_AGAIN/i.test(err.message || '')) {
+      throw new Error(cfg.provider === 'ollama'
+        ? 'Could not reach Ollama. Start it with “ollama serve” and check the host in AI settings.'
+        : 'Could not reach the AI provider. Check your internet connection or base URL.');
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+    if (id) aiAborts.delete(id);
+  }
 });
 
 app.whenReady().then(() => {

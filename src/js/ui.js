@@ -15,6 +15,7 @@ import { consoleLog, log, directSupported } from './jobs.js';
 import { formatDuration } from './gcode.js';
 import * as pv from './preview.js';
 import { renderLibraryTab } from './library.js';
+import { renderAITab } from './aiui.js';
 
 let activeTab = 'layers';
 const $ = id => document.getElementById(id);
@@ -64,7 +65,8 @@ function buildTopbar() {
       ibtn('open', 'Open project (Ctrl+O)', () => run('file.open')),
       ibtn('save', 'Save project (Ctrl+S)', () => run('file.save')),
       ibtn('import', 'Import SVG / DXF / image (Ctrl+I)', () => run('file.import')),
-      ibtn('export', 'Export G-code (Ctrl+E)', () => run('file.exportGcode'))),
+      ibtn('export', 'Export G-code (Ctrl+E)', () => run('file.exportGcode')),
+      ibtn('ai', 'AI design assistant', () => run('ai.panel'))),
     h('div', { class: 'tb-group' },
       ibtn('undo', 'Undo (Ctrl+Z)', () => run('edit.undo'), { attrs: { id: 'tb-undo' } }),
       ibtn('redo', 'Redo (Ctrl+Y)', () => run('edit.redo'), { attrs: { id: 'tb-redo' } })),
@@ -207,7 +209,7 @@ function updateGeometryFields() {
 function buildTabs() {
   const tabs = $('tabs');
   tabs.innerHTML = '';
-  for (const [k, v] of [['layers', 'Layers'], ['object', 'Object'], ['library', 'Library'], ['machine', 'Machine']]) {
+  for (const [k, v] of [['layers', 'Layers'], ['object', 'Object'], ['library', 'Library'], ['ai', 'AI'], ['machine', 'Machine']]) {
     tabs.appendChild(h('button', { class: activeTab === k ? 'active' : '', onClick: () => { activeTab = k; buildTabs(); renderTab(); } }, v));
   }
 }
@@ -221,6 +223,7 @@ function renderTab() {
   if (activeTab === 'layers') renderLayersTab(body);
   else if (activeTab === 'object') renderObjectTab(body);
   else if (activeTab === 'library') renderLibraryTab(body);
+  else if (activeTab === 'ai') renderAITab(body);
   else renderMachineTab(body);
   body.scrollTop = keepScroll;
 }

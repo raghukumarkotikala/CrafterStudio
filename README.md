@@ -30,6 +30,15 @@ The workflow in `.github/workflows/build.yml` builds both in GitHub Actions (run
 - **G-code:** GRBL (M4/M3), grblHAL/FluidNC, Marlin and Smoothieware. Cuts inner shapes before outer ones, orders paths to shorten travel, estimates job time, and can start from the current laser position with a 9-point anchor.
 - **Machine control (USB serial):** connect, jog, home, unlock, set origin, frame, test fire, start/pause/stop with streaming progress, and a console.
 - **Tools:** material library and material test grid generator.
+- **AI (optional, bring your own key):** an **AI** tab in the sidebar and an **AI** menu.
+  - *Generate a design* — describe a piece and get laser-ready vector geometry, sized in millimetres and placed straight onto the canvas. Cut lines come back blue, engraved areas black and score lines red, so they land on correctly configured layers automatically.
+  - *Change the selection* — select objects and ask for an edit in plain language ("turn this into a stencil", "add a 3 mm border and a hanging hole"). Undo restores the original.
+  - *Suggest material settings* — describe a material and get starting-point power/speed/passes for your machine's actual wattage, applied to a layer or saved into the material library in one click.
+
+  Three provider choices under *AI → AI Settings*:
+  - **Anthropic (Claude)** — enter a key and model.
+  - **OpenAI-compatible** — any base URL: OpenAI, OpenRouter, Groq, Together, LM Studio.
+  - **Local (Ollama)** — no key, nothing leaves your machine. Crafter reads your installed models straight from Ollama (`/api/tags`, falling back to `ollama list`) and lists them in a dropdown with parameter count and size; embedding-only models are hidden because they cannot answer a prompt. Point it at a different host to use Ollama on another box. Small models return rough geometry — a 7B-or-larger coder model works best. Nothing is sent anywhere until you add a key and press a button; requests go from your machine straight to the provider you chose. The key is encrypted with the system keyring where one is available and stored outside the project folder, never in the project file. All model output is run through a strict allowlist sanitizer before it touches the canvas. Treat generated designs and settings as a starting point — check the geometry and test on scrap before cutting.
 
 Ruida, Trocen, TopWisdom, M2 Nano, EZCAD galvo and cloud/proprietary machines (Glowforge, xTool P2/M1/F1, LaserPecker …) cannot be driven directly. Crafter designs at their size and exports SVG for the maker's software.
 

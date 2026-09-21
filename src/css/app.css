@@ -245,3 +245,27 @@ table.tbl tr:hover td { background: var(--panel-2); }
 #ctxmenu div.it kbd { color: var(--muted); font: 11px inherit; }
 #ctxmenu div.sep { height: 1px; background: var(--line); margin: 4px 0; }
 kbd { background: var(--panel-3); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; font: 11px Consolas, monospace; }
+
+/* ------------------------------------------------ AI panel */
+.btn.wide { width: 100%; justify-content: center; margin-bottom: 10px; }
+.row.compact > label { width: 40px; }
+.row.compact { margin-bottom: 0; }
+.ai-status { display: flex; align-items: center; gap: 8px; background: var(--panel-2); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 8px 10px; margin-bottom: 10px; }
+.ai-status-t { flex: 1; min-width: 0; }
+.ai-status-t > div:first-child { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ai-ideas { margin-top: 6px; }
+.ai-ideas .chip { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ai-busy { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; margin-bottom: 10px; }
+.spin { width: 13px; height: 13px; border: 2px solid var(--line); border-top-color: var(--accent);
+  border-radius: 50%; animation: spin .8s linear infinite; flex: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.ai-preview { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 8px;
+  display: grid; place-items: center; overflow: hidden; }
+.ai-preview svg { width: 100%; height: auto; max-height: 240px; display: block; }
+.ai-preview.small { padding: 3px; }
+.ai-preview.small svg { max-height: 56px; }
+.ai-history { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
+.ai-hist { border: 2px solid transparent; border-radius: var(--radius); cursor: pointer; overflow: hidden; }
+.ai-hist:hover { border-color: var(--panel-3); }
+.ai-hist.sel { border-color: var(--accent); }

@@ -6,6 +6,8 @@ import * as io from './io.js';
 import * as dlg from './dialogs.js';
 import * as jobs from './jobs.js';
 import { setTool, TOOLS } from './tools.js';
+import * as aiui from './aiui.js';
+import { showTab } from './ui.js';
 
 export const cmds = {
   'file.new': io.newProject,
@@ -73,6 +75,11 @@ export const cmds = {
   'job.stop': jobs.stopJob,
   'tools.materials': dlg.openMaterialsDialog,
   'tools.materialTest': dlg.openMaterialTestDialog,
+
+  'ai.panel': () => showTab('ai'),
+  'ai.assist': aiui.openAssistDialog,
+  'ai.materials': aiui.openAdvisor,
+  'ai.settings': aiui.openAISettings,
 
   'help.shortcuts': dlg.openShortcuts,
   'help.about': dlg.openAbout
