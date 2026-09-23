@@ -203,6 +203,8 @@ ipcMain.on('serial:choose', (e, portId) => {
   }
 });
 
+ipcMain.handle('app:version', () => app.getVersion());
+
 ipcMain.on('app:dirty', (e, value) => {
   dirty = !!value;
 });

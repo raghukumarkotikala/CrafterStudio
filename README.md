@@ -43,3 +43,18 @@ The workflow in `.github/workflows/build.yml` builds both in GitHub Actions (run
 Ruida, Trocen, TopWisdom, M2 Nano, EZCAD galvo and cloud/proprietary machines (Glowforge, xTool P2/M1/F1, LaserPecker …) cannot be driven directly. Crafter designs at their size and exports SVG for the maker's software.
 
 Profile specs are nominal manufacturer figures — verify your machine's work area and origin.
+
+## Licence
+
+Crafter is released under the [ISC licence](LICENSE) and comes with no warranty. You operate your machine at your own risk: always wear eye protection rated for your laser's wavelength, never leave a running laser unattended, and keep a fire extinguisher nearby.
+
+Bundled third-party work, all redistributed under their own licences:
+
+| Component | Licence |
+|---|---|
+| [Tabler Icons](https://tabler.io/icons) | MIT — © Paweł Kuna ([text](src/library/LICENSE-tabler.txt)) |
+| [Material Design Icons](https://pictogrammers.com/library/mdi/) | Apache-2.0 — Pictogrammers ([text](src/library/LICENSE-mdi.txt)) |
+| [Electron](https://electronjs.org), [paper.js](http://paperjs.org), [paperjs-offset](https://github.com/glenzli/paperjs-offset), [opentype.js](https://opentype.js.org), [dxf-parser](https://github.com/gdsestimating/dxf-parser) | MIT |
+| [imagetracerjs](https://github.com/jankovicsandras/imagetracerjs) | Unlicense (public domain) |
+
+The built-in art pieces, including the cartoon characters, are Crafter's own designs — no licensed or branded characters are shipped. Machine brand and model names are used only to identify compatible hardware; Crafter is not affiliated with or endorsed by any of them.

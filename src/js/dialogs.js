@@ -467,16 +467,18 @@ export function openShortcuts() {
   });
 }
 
-export function openAbout() {
+export async function openAbout() {
+  const version = window.api && window.api.appVersion ? await window.api.appVersion() : '';
   openModal({
     title: 'About Crafter', width: '480px',
     body: h('div', {},
       h('img', { class: 'logo-hero', src: 'assets/logo.png', alt: 'Crafter' }),
-      h('p', { class: 'center' }, h('b', {}, 'Crafter'), ' — laser design & control studio.'),
+      h('p', { class: 'center' }, h('b', {}, 'Crafter'), version ? ` ${version}` : '', ' — laser design & control studio.'),
       h('p', { class: 'muted' }, `Machine database: ${MACHINES.length} profiles from ${BRANDS.length} brands, plus unlimited custom profiles.`),
       h('p', { class: 'muted' }, 'Direct USB control: GRBL, grblHAL/FluidNC, Marlin, Smoothieware. Other controllers: design and export.'),
       h('p', { class: 'muted small' }, 'Built with Electron, paper.js, opentype.js, dxf-parser and imagetracerjs.'),
       h('p', { class: 'muted small' }, 'Library icons: Tabler Icons (MIT, © Paweł Kuna) and Material Design Icons (Apache-2.0, Pictogrammers).'),
+      h('p', { class: 'muted small' }, 'Crafter is released under the ISC licence and comes with no warranty.'),
       h('div', { class: 'note warn' }, 'Laser safety: always wear eye protection rated for your laser\'s wavelength, never leave a running laser unattended, and keep a fire extinguisher nearby.')),
     buttons: [{ label: 'Close', primary: true }]
   });

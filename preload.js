@@ -6,6 +6,7 @@ contextBridge.exposeInMainWorld('api', {
   listFonts: () => ipcRenderer.invoke('fonts:list'),
   readFont: p => ipcRenderer.invoke('fonts:read', p),
   confirm: opts => ipcRenderer.invoke('app:confirm', opts),
+  appVersion: () => ipcRenderer.invoke('app:version'),
   libBundle: name => ipcRenderer.invoke('lib:bundle', name),
   libList: () => ipcRenderer.invoke('lib:list'),
   libAdd: () => ipcRenderer.invoke('lib:add'),

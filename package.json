@@ -1,7 +1,8 @@
 {
   "name": "crafter",
   "productName": "Crafter",
-  "version": "1.0.0",
+  "desktopName": "crafter.desktop",
+  "version": "1.1.0",
   "description": "Crafter - laser engraving & cutting design and control studio",
   "main": "main.js",
   "scripts": {
@@ -25,8 +26,8 @@
   "devDependencies": {
     "@mdi/svg": "^7.4.47",
     "@tabler/icons": "^3.47.0",
-    "electron": "^33.4.11",
-    "electron-builder": "^24.13.3"
+    "electron": "^44.4.4",
+    "electron-builder": "^26.15.3"
   },
   "build": {
     "appId": "com.crafter.laser",
@@ -63,6 +64,7 @@
       ],
       "icon": "build/icon.png",
       "category": "Graphics",
+      "syncDesktopName": true,
       "artifactName": "Crafter-${version}-x86_64.AppImage"
     }
   }
