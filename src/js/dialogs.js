@@ -331,11 +331,18 @@ export function openMaterialsDialog() {
     tableWrap.innerHTML = '';
     const items = setKey === 'user' ? state.userMaterials : MATERIAL_SETS[setKey].items;
     if (!items.length) { tableWrap.appendChild(h('div', { class: 'note' }, 'No saved presets yet. Use “Save active layer as preset”.')); return; }
+    const setNote = setKey !== 'user' && MATERIAL_SETS[setKey].note;
+    if (setNote) tableWrap.appendChild(h('div', { class: 'note warn' }, setNote));
     tableWrap.appendChild(h('table', { class: 'tbl' },
       h('tr', {}, ...['Material', 'Thickness', 'Operation', 'Mode', 'Power', 'Speed', 'Passes', 'Interval', ''].map(t => h('th', {}, t))),
-      ...items.map((m, idx) => h('tr', {},
-        h('td', {}, m.material), h('td', {}, m.thickness), h('td', {}, m.op), h('td', {}, h('span', { class: 'badge ' + m.mode }, m.mode)),
-        h('td', {}, m.power + '%'), h('td', {}, m.speed), h('td', {}, m.passes), h('td', {}, m.interval),
+      ...items.map((m, idx) => m.danger
+        ? h('tr', { class: 'danger-row' },
+          h('td', { colspan: 8 }, h('b', {}, m.material), ' — ', h('span', { class: 'badge danger' }, 'never laser'), ' ', h('span', { class: 'muted' }, m.note)),
+          h('td', {}))
+        : h('tr', {},
+          h('td', {}, m.material, m.note ? h('small', { class: 'muted', style: { display: 'block' } }, m.note) : null),
+          h('td', {}, m.thickness), h('td', {}, m.op), h('td', {}, h('span', { class: 'badge ' + m.mode }, m.mode)),
+          h('td', {}, m.power + '%'), h('td', {}, m.speed), h('td', {}, m.passes), h('td', {}, m.interval),
         h('td', {}, h('button', { class: 'btn small primary', onClick: () => {
           Object.assign(layer, { mode: m.mode, power: m.power, speed: m.speed, passes: m.passes, interval: m.interval, name: `${m.material} ${m.op}`.slice(0, 40) });
           bus.emit('layers');

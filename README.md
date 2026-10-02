@@ -18,6 +18,8 @@ npm start
 
 The workflow in `.github/workflows/build.yml` builds both in GitHub Actions (run it manually, or push a `v*` tag).
 
+Building needs Node 20 or newer (Electron 44's installer requires it) and npm 10 — electron-builder 26 fails to read the dependency tree from npm 11. Installers are not committed: an Electron 44 build is about 113 MB, over GitHub's 100 MB per-file limit, so releases carry the binaries.
+
 ## Features
 
 - **Design:** select/transform (move, scale, rotate), node editing, rectangle (with corner radius), ellipse, polygon, star, line, Bézier pen, freehand pencil, and text using any installed font (converted to outlines).
@@ -29,7 +31,7 @@ The workflow in `.github/workflows/build.yml` builds both in GitHub Actions (run
 - **Machines:** about 380 profiles from 46 brands, plus custom profiles. The work area size and origin corner are fully editable.
 - **G-code:** GRBL (M4/M3), grblHAL/FluidNC, Marlin and Smoothieware. Cuts inner shapes before outer ones, orders paths to shorten travel, estimates job time, and can start from the current laser position with a 9-point anchor.
 - **Machine control (USB serial):** connect, jog, home, unlock, set origin, frame, test fire, start/pause/stop with streaming progress, and a console.
-- **Tools:** material library and material test grid generator.
+- **Tools:** material library and material test grid generator. The library covers wood, acrylic, leather, paper, slate, glass and metals per laser class, plus **3D printing filaments** (PLA, PETG, TPU, ABS/ASA, nylon, PC, PP, PVB, wood/carbon-filled and cured resin) for engraving printed parts, with fume warnings and the filaments that must never be lasered.
 - **AI (optional, bring your own key):** an **AI** tab in the sidebar and an **AI** menu.
   - *Generate a design* — describe a piece and get laser-ready vector geometry, sized in millimetres and placed straight onto the canvas. Cut lines come back blue, engraved areas black and score lines red, so they land on correctly configured layers automatically.
   - *Change the selection* — select objects and ask for an edit in plain language ("turn this into a stencil", "add a 3 mm border and a hanging hole"). Undo restores the original.

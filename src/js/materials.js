@@ -105,6 +105,74 @@ export const MATERIAL_SETS = {
   }
 };
 
+// ---------------------------------------------------------------------------
+// 3D printing filaments. These settings mark/engrave finished printed parts and
+// cut thin printed sheets. note explains quirks; danger flags filaments that
+// must never go into a laser.
+// ---------------------------------------------------------------------------
+const frow = (material, thickness, op, mode, power, speed, passes, interval, note) =>
+  ({ material, thickness, op, mode, power, speed, passes, interval, note });
+
+const never = (material, note) =>
+  ({ material, thickness: '—', op: 'Do not laser', mode: 'line', power: 0, speed: 0, passes: 0, interval: 0, note, danger: true });
+
+const FILAMENT_NOTE = 'Printed plastics melt rather than vaporise: expect rounded, glossy edges and strong fumes. Use extraction, air assist, low power and several passes. Dark opaque filament marks far better than natural or transparent.';
+
+Object.assign(MATERIAL_SETS, {
+  'filament-diode': {
+    label: '3D filaments — diode (plastic)',
+    note: FILAMENT_NOTE + ' A blue diode passes straight through clear plastic, so paint clear parts or use CO₂.',
+    items: [
+      frow('PLA (black / dark)', '—', 'Engrave', 'fill', 25, 3000, 1, 0.1, 'The best filament for diode engraving — a frosted light mark on dark plastic.'),
+      frow('PLA (black / dark)', '—', 'Deep engrave', 'fill', 45, 1500, 2, 0.1, 'Let the part cool between passes or it deforms.'),
+      frow('PLA (natural / white)', '—', 'Engrave', 'fill', 60, 1200, 1, 0.1, 'Weak contrast on light colours; marking spray or paint helps.'),
+      frow('PLA (silk / glossy)', '—', 'Engrave', 'fill', 20, 4000, 1, 0.1, 'Silk coatings scorch easily — start below matte PLA.'),
+      frow('PLA (matte)', '—', 'Engrave', 'fill', 30, 2500, 1, 0.1, ''),
+      frow('PLA printed sheet', '1 mm', 'Cut', 'line', 100, 180, 3, 0.1, 'Edges melt and bead; thin flat prints cut better than solid parts.'),
+      frow('PLA printed sheet', '2 mm', 'Cut', 'line', 100, 120, 5, 0.1, ''),
+      frow('Wood-fill PLA', '—', 'Engrave', 'fill', 30, 3000, 1, 0.08, 'Behaves like thin plywood; the best contrast of any filament.'),
+      frow('Carbon-fibre PLA / PETG', '—', 'Engrave', 'fill', 30, 2500, 1, 0.08, 'Dark and matte, so it marks cleanly.'),
+      frow('Glow-in-the-dark PLA', '—', 'Engrave', 'fill', 35, 2500, 1, 0.1, 'Abrasive filler; marks grey.'),
+      frow('PETG (black / opaque)', '—', 'Engrave', 'fill', 30, 2500, 1, 0.1, 'Melts and strings more than PLA; keep the speed up.'),
+      frow('PETG (clear)', '—', 'Engrave', 'fill', 60, 1500, 1, 0.1, 'Diode light passes through clear PETG — paint the surface first, or use CO₂.'),
+      frow('TPU (flexible)', '—', 'Engrave', 'fill', 20, 3500, 1, 0.1, 'Low power only; the surface distorts quickly.'),
+      frow('PVB (polishable)', '—', 'Engrave', 'fill', 20, 3500, 1, 0.1, 'Softens at low temperature — keep power minimal.'),
+      frow('HIPS', '—', 'Engrave', 'fill', 30, 2500, 1, 0.1, 'Styrene fumes: extract outdoors, never into the room.'),
+      frow('ABS / ASA', '—', 'Engrave', 'fill', 25, 3000, 1, 0.1, 'Gives off styrene and fine soot — outdoor-vented extraction only.'),
+      frow('Nylon (PA, PA-CF)', '—', 'Engrave', 'fill', 35, 2500, 1, 0.1, 'Can release hydrogen cyanide. Vent outdoors, keep jobs short, never leave it running.'),
+      frow('Polycarbonate (PC)', '—', 'Engrave', 'fill', 40, 2000, 1, 0.1, 'Burns brown and yellows at the edges; results are usually poor.'),
+      frow('Polypropylene (PP)', '—', 'Engrave', 'fill', 25, 3000, 1, 0.1, 'Melts into puddles instead of marking; test on scrap.'),
+      frow('Resin print (cured SLA)', '—', 'Engrave', 'fill', 25, 3000, 1, 0.1, 'Wash and fully cure the part first; uncured resin fumes are toxic.'),
+      never('PVC / vinyl filament', 'Releases chlorine gas, which corrodes the machine and is dangerous to breathe.'),
+      never('Flame-retardant / PVC-blend filament', 'Halogenated additives release corrosive acid gas.')
+    ]
+  },
+  'filament-co2': {
+    label: '3D filaments — CO₂ (plastic)',
+    note: FILAMENT_NOTE + ' CO₂ light is absorbed by every plastic, so clear filament engraves too.',
+    items: [
+      frow('PLA (any colour)', '—', 'Engrave', 'fill', 15, 9000, 1, 0.1, 'CO₂ marks light and clear filament as well as dark.'),
+      frow('PLA (any colour)', '—', 'Deep engrave', 'fill', 30, 4000, 2, 0.1, ''),
+      frow('PLA printed sheet', '2 mm', 'Cut', 'line', 45, 700, 1, 0.1, 'Edges stay glossy; a slow second pass cleans the underside.'),
+      frow('PLA printed sheet', '4 mm', 'Cut', 'line', 60, 350, 2, 0.1, ''),
+      frow('PETG (clear or opaque)', '—', 'Engrave', 'fill', 18, 8000, 1, 0.1, 'Frosted mark; keep the speed high to avoid melt-back.'),
+      frow('PETG printed sheet', '2 mm', 'Cut', 'line', 45, 600, 1, 0.1, ''),
+      frow('Wood-fill PLA', '—', 'Engrave', 'fill', 20, 7000, 1, 0.1, 'Darkens like real wood.'),
+      frow('Carbon-fibre PLA / PETG', '—', 'Engrave', 'fill', 20, 7000, 1, 0.08, ''),
+      frow('TPU (flexible)', '—', 'Engrave', 'fill', 12, 9000, 1, 0.1, 'Very low power; the surface deforms easily.'),
+      frow('PVB (polishable)', '—', 'Engrave', 'fill', 12, 9000, 1, 0.1, ''),
+      frow('HIPS', '—', 'Engrave', 'fill', 18, 8000, 1, 0.1, 'Styrene fumes: vent outdoors.'),
+      frow('ABS / ASA', '—', 'Engrave', 'fill', 18, 8000, 1, 0.1, 'Styrene and soot; vent outdoors and clean the lens afterwards.'),
+      frow('Nylon (PA, PA-CF)', '—', 'Engrave', 'fill', 22, 7000, 1, 0.1, 'Can release hydrogen cyanide. Vent outdoors and stay with the machine.'),
+      frow('Polycarbonate (PC)', '—', 'Engrave', 'fill', 25, 6000, 1, 0.1, 'Yellows and chars; test on scrap.'),
+      frow('Polypropylene (PP)', '—', 'Engrave', 'fill', 15, 9000, 1, 0.1, 'Melts readily; light marking only.'),
+      frow('Resin print (cured SLA)', '—', 'Engrave', 'fill', 15, 8000, 1, 0.1, 'Cure and wash the part before lasering.'),
+      never('PVC / vinyl filament', 'Releases chlorine gas, which corrodes the machine and is dangerous to breathe.'),
+      never('Flame-retardant / PVC-blend filament', 'Halogenated additives release corrosive acid gas.')
+    ]
+  }
+});
+
 export function materialSetFor(device) {
   if (device.type === 'co2') return 'co2';
   if (device.type === 'fiber' || device.type === 'ir' || device.type === 'uv') return 'fiber';

@@ -269,3 +269,7 @@ kbd { background: var(--panel-3); border: 1px solid var(--line); border-radius: 
 .ai-hist { border: 2px solid transparent; border-radius: var(--radius); cursor: pointer; overflow: hidden; }
 .ai-hist:hover { border-color: var(--panel-3); }
 .ai-hist.sel { border-color: var(--accent); }
+/* material library: hazard rows */
+.badge.danger { background: #4a1f26; color: #ff9aa5; }
+tr.danger-row td { background: #2b1a1d; border-bottom: 1px solid #4a1f26; }
+table.tbl td small { font-size: 11px; line-height: 1.3; margin-top: 2px; }

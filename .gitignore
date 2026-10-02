@@ -1,13 +1,8 @@
 node_modules/
 
-# Build output: keep only the Windows installers, not the unpacked folders
-dist/*
-!dist/Crafter-Setup-*.exe
-!dist/Crafter-Portable-*.exe
-
-# Files over GitHub's 100 MB limit — build locally with `npm run dist:linux`
-dist/*.tar.gz
-dist/*.AppImage
+# Build output. Installers are published on GitHub Releases, not committed:
+# Electron 44 builds are ~113 MB, over GitHub's 100 MB per-file limit.
+dist/
 
 npm-debug.log*
 .DS_Store
