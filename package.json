@@ -2,7 +2,7 @@
   "name": "crafter-studio",
   "productName": "Crafter Studio",
   "desktopName": "crafter-studio.desktop",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Crafter Studio - laser engraving & cutting design and control studio",
   "main": "main.js",
   "engines": {
