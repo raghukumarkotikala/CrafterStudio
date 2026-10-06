@@ -11,13 +11,17 @@ permissions:
 
 jobs:
   build:
+    # electron-builder publishes implicitly when it detects CI + a git tag;
+    # --publish never keeps building side-effect free and leaves releasing to the
+    # release job, which has the token and the tag message.
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: windows-latest
-            cmd: npx electron-builder --win --x64
+            cmd: npx electron-builder --win --x64 --publish never
           - os: ubuntu-latest
-            cmd: npx electron-builder --linux AppImage --x64
+            cmd: npx electron-builder --linux AppImage --x64 --publish never
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
