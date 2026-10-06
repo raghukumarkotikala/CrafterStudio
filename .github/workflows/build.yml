@@ -58,7 +58,14 @@ jobs:
         run: ls -lh artifacts
 
       - name: Use the annotated tag message as the release notes
-        run: git tag -l --format='%(contents)' "$GITHUB_REF_NAME" > notes.md
+        run: |
+          # actions/checkout leaves behind a lightweight tag ref, and %(contents)
+          # on a lightweight tag yields the commit message instead of the tag
+          # annotation. Refetch the real tag object before reading it.
+          git fetch --force origin "refs/tags/${GITHUB_REF_NAME}:refs/tags/${GITHUB_REF_NAME}"
+          echo "tag object type: $(git cat-file -t "$GITHUB_REF_NAME")"
+          git tag -l --format='%(contents)' "$GITHUB_REF_NAME" > notes.md
+          cat notes.md
 
       - uses: softprops/action-gh-release@v2
         with:
