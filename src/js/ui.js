@@ -59,7 +59,9 @@ function buildTopbar() {
   const dev = state.device;
   const ctl = CONTROLLERS[dev.controller] || CONTROLLERS.grbl;
   tb.append(
-    h('div', { class: 'brand', title: 'About Crafter Studio', onClick: () => run('help.about') }, h('img', { src: 'assets/wordmark.png', alt: 'Crafter Studio' })),
+    h('div', { class: 'brand', title: 'About Crafter Studio', onClick: () => run('help.about') },
+      h('img', { src: 'assets/wordmark.png', alt: 'Crafter' }),
+      h('span', { class: 'brand-suffix' }, 'Studio')),
     h('div', { class: 'tb-group' },
       ibtn('new', 'New project (Ctrl+N)', () => run('file.new')),
       ibtn('open', 'Open project (Ctrl+O)', () => run('file.open')),

@@ -650,7 +650,24 @@ ipcMain.handle('ai:request', async (e, { id, system, user, maxTokens } = {}) => 
   }
 });
 
+// Two copies sharing one userData directory fight over the Local Storage lock: the
+// second starts with empty settings and can overwrite the first's machine profile,
+// layers and material presets. Focus the existing window instead of opening another.
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (!win) return;
+    if (win.isMinimized()) win.restore();
+    win.show();
+    win.focus();
+  });
+}
+
 app.whenReady().then(() => {
+  if (!gotTheLock) return;
   buildMenu();
   createWindow();
   app.on('activate', () => {

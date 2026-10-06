@@ -35,7 +35,12 @@
   header{position:sticky; top:0; z-index:10; background:rgba(23,25,30,.86);
     backdrop-filter:blur(8px); border-bottom:1px solid var(--line)}
   .bar{display:flex; align-items:center; gap:20px; height:62px}
-  .bar img{height:30px; width:auto; display:block}
+  /* The wordmark is dark blue on white; on the dark header it keeps its own
+     plate because that blue reads 1.5:1 against the background without it. */
+  .brandmark{display:flex; align-items:center; gap:8px; background:#fff;
+    border-radius:9px; padding:6px 12px}
+  .brandmark img{height:32px; width:auto; display:block}
+  .brandmark span{font-size:19px; font-weight:650; color:#0030a8; letter-spacing:.2px}
   nav{margin-left:auto; display:flex; gap:22px; align-items:center; flex-wrap:wrap}
   nav a{color:var(--muted); font-size:14.5px; font-weight:600}
   nav a:hover{color:var(--text); text-decoration:none}
@@ -119,7 +124,10 @@
 
 <header>
   <div class="wrap bar">
-    <img src="assets/wordmark.png" alt="Crafter Studio">
+    <div class="brandmark">
+      <img src="assets/wordmark.png" alt="Crafter">
+      <span>Studio</span>
+    </div>
     <nav>
       <a href="#features">Features</a>
       <a href="#ai">AI</a>

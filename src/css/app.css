@@ -36,8 +36,10 @@ button { cursor: pointer; }
 #topbar > .spacer, #topbar > .device-chip { flex-shrink: 1; min-width: 0; }
 @media (max-width: 1640px) { #topbar .tb-group.align { display: none; } }
 @media (max-width: 1320px) { #topbar .tb-group.objops { display: none; } }
-.brand { display: flex; align-items: center; margin-right: 8px; height: 38px; padding: 0 10px; background: #fff; border-radius: 8px; cursor: pointer; }
-.brand img { height: 28px; display: block; }
+.brand { display: flex; align-items: center; gap: 7px; margin-right: 8px; height: 38px; padding: 0 11px; background: #fff; border-radius: 8px; cursor: pointer; }
+.brand img { height: 31px; display: block; }
+/* Sits on the white plate, so it uses the wordmark's own blue (10.6:1 on white). */
+.brand-suffix { font-size: 18px; font-weight: 600; color: #0030a8; letter-spacing: .2px; }
 .logo-hero { display: block; margin: 0 auto 12px; width: 220px; height: 220px; border-radius: 16px; background: #fff; }
 .tb-group { display: flex; align-items: center; gap: 2px; padding: 0 6px; border-right: 1px solid var(--line); }
 .tb-group:last-of-type { border-right: 0; }
