@@ -19,6 +19,13 @@
   },
   "author": "Crafter Studio",
   "homepage": "https://crafterstudio.in",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/raghukumarkotikala/CrafterStudio.git"
+  },
+  "bugs": {
+    "url": "https://github.com/raghukumarkotikala/CrafterStudio/issues"
+  },
   "license": "ISC",
   "dependencies": {
     "dxf-parser": "^1.1.2",
