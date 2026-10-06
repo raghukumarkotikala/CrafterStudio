@@ -88,6 +88,13 @@
   .dl .btn{justify-content:center; margin-top:auto}
   .req{color:var(--dim); font-size:13.5px; margin:0}
 
+  /* ---------- support ---------- */
+  .support{text-align:center}
+  .support .sub{margin-left:auto; margin-right:auto; margin-bottom:16px}
+  .support .note{text-align:left}
+  .kofi{padding:14px 26px; font-size:16px}
+  .kofi svg{width:21px; height:21px}
+
   /* ---------- notices ---------- */
   .note{border:1px solid var(--line); background:var(--panel-2); border-radius:var(--radius);
     padding:16px 18px; color:var(--muted); font-size:14.5px}
@@ -117,6 +124,7 @@
       <a href="#features">Features</a>
       <a href="#ai">AI</a>
       <a href="#download">Download</a>
+      <a href="#support">Donate</a>
       <a href="https://github.com/raghukumarkotikala/Crafter">Source</a>
     </nav>
   </div>
@@ -242,6 +250,40 @@
   </div>
 </section>
 
+<section id="support">
+  <div class="wrap support">
+    <h2>Crafter Studio is free — and staying that way</h2>
+    <p class="sub">
+      It is open source under the ISC licence: use it commercially, modify it, redistribute it,
+      no strings. There is no paid tier and nothing is held back.
+    </p>
+    <p class="sub">
+      If it saved you a job, a wasted sheet of ply, or an afternoon of fighting another tool,
+      a one-off contribution helps pay for new machine profiles, test materials and the hardware
+      needed to verify them.
+    </p>
+
+    <!-- TODO: replace with your real Ko-fi handle once the page exists -->
+    <a class="btn primary kofi" href="https://ko-fi.com/crafterstudio" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 8h12v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z"/>
+        <path d="M16 9h2.5a2.5 2.5 0 0 1 0 5H16"/>
+        <path d="M7 2.5c-.6.8-.6 1.7 0 2.5M11 2.5c-.6.8-.6 1.7 0 2.5"/>
+      </svg>
+      Support the project on Ko-fi
+    </a>
+
+    <p class="meta" style="margin-top:14px">One-off, no account needed, no subscription.</p>
+
+    <div class="note" style="margin-top:28px">
+      <b>Not in a position to donate?</b> That is completely fine — these help just as much:
+      report a bug you hit, send a machine profile for hardware we have not covered,
+      tell us which materials settings worked for you, or just star the repo so other
+      makers find it.
+    </div>
+  </div>
+</section>
+
 <section>
   <div class="wrap">
     <div class="note warn">
@@ -267,6 +309,7 @@
       <p><a href="https://github.com/raghukumarkotikala/Crafter">GitHub</a></p>
       <p><a href="https://github.com/raghukumarkotikala/Crafter/releases">Releases</a></p>
       <p><a href="https://github.com/raghukumarkotikala/Crafter/issues">Report an issue</a></p>
+      <p><a href="#support">Donate</a></p>
     </div>
   </div>
 </footer>
