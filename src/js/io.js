@@ -1,4 +1,4 @@
-// Import / export: SVG, DXF, bitmap images, Crafter projects, G-code.
+// Import / export: SVG, DXF, bitmap images, Crafter Studio projects, G-code.
 /* global paper, DxfParser */
 import { state, bus, PALETTE, defaultLayer, setDirty } from './state.js';
 import { ed, addItem, styleItem, pushHistory, resetHistory, clearSelection, restyleAll, drawWorkArea, fitWorkArea, select } from './editor.js';
@@ -375,14 +375,14 @@ async function confirmDiscard() {
 
 export async function openProject() {
   if (state.dirty && !(await confirmDiscard())) return;
-  const f = await pickFile([{ name: 'Crafter project', extensions: ['crafter'] }]);
+  const f = await pickFile([{ name: 'Crafter Studio project', extensions: ['crafter'] }]);
   if (!f) return;
   await loadProjectText(f.text, f);
 }
 
 async function loadProjectText(text, f) {
   const p = JSON.parse(text);
-  if (p.app !== 'crafter') throw new Error('Not a Crafter project');
+  if (p.app !== 'crafter') throw new Error('Not a Crafter Studio project');
   clearSelection();
   if (p.device) {
     state.device = { ...state.device, ...p.device };
@@ -407,7 +407,7 @@ async function loadProjectText(text, f) {
 
 export async function saveProject(saveAs = false) {
   const r = await saveText(projectJSON(), (state.fileName.replace(/\.crafter$/i, '') || 'project') + '.crafter',
-    [{ name: 'Crafter project', extensions: ['crafter'] }], saveAs ? undefined : state.filePath || undefined);
+    [{ name: 'Crafter Studio project', extensions: ['crafter'] }], saveAs ? undefined : state.filePath || undefined);
   if (!r) return;
   state.filePath = r.path || null;
   state.fileName = r.name;

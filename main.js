@@ -1,8 +1,32 @@
-// Crafter — Electron main process
+// Crafter Studio — Electron main process
 const { app, BrowserWindow, Menu, ipcMain, dialog, shell, safeStorage } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { execFile } = require('child_process');
+
+// The app shipped as "Crafter" before the rename, so Electron kept its data in
+// <appData>/Crafter. Carry the parts that matter across on first run, otherwise the
+// rename silently loses saved machine profiles, My Library and AI settings.
+// Caches are deliberately left behind — they rebuild themselves.
+function migrateLegacyUserData() {
+  const CARRY = ['ai.json', 'library', 'Local Storage'];
+  try {
+    const current = app.getPath('userData');
+    const legacy = path.join(app.getPath('appData'), 'Crafter');
+    if (current === legacy || !fs.existsSync(legacy)) return;
+    for (const entry of CARRY) {
+      const from = path.join(legacy, entry);
+      const to = path.join(current, entry);
+      if (!fs.existsSync(from) || fs.existsSync(to)) continue;
+      fs.mkdirSync(path.dirname(to), { recursive: true });
+      fs.cpSync(from, to, { recursive: true });
+      console.log(`Carried over ${entry} from the previous Crafter install.`);
+    }
+  } catch (e) {
+    console.error('Could not carry over the previous install\'s data:', e.message);
+  }
+}
+migrateLegacyUserData();
 
 let win = null;
 let dirty = false;
@@ -134,7 +158,7 @@ function buildMenu() {
       label: 'Help',
       submenu: [
         item('Keyboard Shortcuts', 'help.shortcuts', 'F1'),
-        item('About Crafter', 'help.about')
+        item('About Crafter Studio', 'help.about')
       ]
     }
   ];
@@ -148,7 +172,7 @@ function createWindow() {
     minWidth: 1000,
     minHeight: 640,
     backgroundColor: '#1b1e24',
-    title: 'Crafter',
+    title: 'Crafter Studio',
     icon: path.join(__dirname, 'build', 'icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -400,7 +424,7 @@ ipcMain.handle('app:confirm', async (e, opts) => {
     buttons: opts.buttons || ['OK', 'Cancel'],
     defaultId: 0,
     cancelId: (opts.buttons || ['OK', 'Cancel']).length - 1,
-    title: opts.title || 'Crafter',
+    title: opts.title || 'Crafter Studio',
     message: opts.message || '',
     detail: opts.detail || ''
   });

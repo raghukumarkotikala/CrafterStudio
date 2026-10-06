@@ -354,7 +354,7 @@ function mandala(layers, seed) {
 }
 
 // ------------------------------------------------------------------ Characters
-// Original cartoon-style designs drawn for Crafter (no licensed/branded characters).
+// Original cartoon-style designs drawn for Crafter Studio (no licensed/branded characters).
 // Eyes and mouths are holes inside their own path; overlapping parts are separate paths.
 {
   const C = 'Characters';

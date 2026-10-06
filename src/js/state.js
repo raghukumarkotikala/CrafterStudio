@@ -87,8 +87,8 @@ export function setDirty(v = true) {
   state.dirty = v;
   if (window.api) {
     window.api.setDirty(v);
-    window.api.setTitle(`${v ? '• ' : ''}${state.fileName} — Crafter`);
+    window.api.setTitle(`${v ? '• ' : ''}${state.fileName} — Crafter Studio`);
   } else {
-    document.title = `${v ? '• ' : ''}${state.fileName} — Crafter`;
+    document.title = `${v ? '• ' : ''}${state.fileName} — Crafter Studio`;
   }
 }

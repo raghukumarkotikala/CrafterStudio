@@ -1,10 +1,14 @@
 {
-  "name": "crafter",
-  "productName": "Crafter",
-  "desktopName": "crafter.desktop",
-  "version": "1.1.0",
-  "description": "Crafter - laser engraving & cutting design and control studio",
+  "name": "crafter-studio",
+  "productName": "Crafter Studio",
+  "desktopName": "crafter-studio.desktop",
+  "version": "1.2.0",
+  "description": "Crafter Studio - laser engraving & cutting design and control studio",
   "main": "main.js",
+  "engines": {
+    "node": ">=22.12.0",
+    "npm": "<11"
+  },
   "scripts": {
     "start": "electron .",
     "library": "node scripts/build-library.js",
@@ -13,8 +17,8 @@
     "dist:all": "npm run library && electron-builder --win --linux --x64",
     "dist:dir": "electron-builder --dir"
   },
-  "author": "Crafter",
-  "homepage": "https://github.com/crafter-laser/crafter",
+  "author": "Crafter Studio",
+  "homepage": "https://crafterstudio.in",
   "license": "ISC",
   "dependencies": {
     "dxf-parser": "^1.1.2",
@@ -30,8 +34,8 @@
     "electron-builder": "^26.15.3"
   },
   "build": {
-    "appId": "com.crafter.laser",
-    "productName": "Crafter",
+    "appId": "in.crafterstudio.app",
+    "productName": "Crafter Studio",
     "directories": {
       "output": "dist",
       "buildResources": "build"
@@ -53,10 +57,10 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "artifactName": "Crafter-Setup-${version}.exe"
+      "artifactName": "CrafterStudio-Setup-${version}.exe"
     },
     "portable": {
-      "artifactName": "Crafter-Portable-${version}.exe"
+      "artifactName": "CrafterStudio-Portable-${version}.exe"
     },
     "linux": {
       "target": [
@@ -65,7 +69,7 @@
       "icon": "build/icon.png",
       "category": "Graphics",
       "syncDesktopName": true,
-      "artifactName": "Crafter-${version}-x86_64.AppImage"
+      "artifactName": "CrafterStudio-${version}-x86_64.AppImage"
     }
   }
 }

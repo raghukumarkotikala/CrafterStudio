@@ -54,7 +54,7 @@ export async function toggleConnect() {
     return;
   }
   if (!machine.supported) {
-    toast('Serial connections need the Crafter desktop app (Web Serial not available here).', 'err');
+    toast('Serial connections need the Crafter Studio desktop app (Web Serial not available here).', 'err');
     return;
   }
   try {
@@ -92,7 +92,7 @@ function outputBounds() {
 }
 
 function requireReady() {
-  if (!directSupported()) { toast('This machine can\'t be driven directly from Crafter — export SVG instead.', 'warn'); return false; }
+  if (!directSupported()) { toast('This machine can\'t be driven directly from Crafter Studio — export SVG instead.', 'warn'); return false; }
   if (!machine.connected) { toast('Connect to the machine first (Machine tab → Connect).', 'warn'); return false; }
   if (machine.job) { toast('A job is already running.', 'warn'); return false; }
   return true;

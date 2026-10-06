@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crafter Studio — laser engraving &amp; cutting design studio</title>
+<meta name="description" content="A free, open-source desktop studio for laser engravers and cutters. Design, import, lay out, generate G-code and drive your machine over USB. Windows and Linux.">
+<link rel="icon" href="assets/favicon-64.png">
+<meta property="og:title" content="Crafter Studio — laser engraving &amp; cutting design studio">
+<meta property="og:description" content="Design, generate G-code and drive your laser over USB. Free and open source.">
+<meta property="og:image" content="https://crafterstudio.in/assets/screenshot.png">
+<meta property="og:url" content="https://crafterstudio.in">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  :root{
+    --bg:#17191e; --panel:#1f2228; --panel-2:#262a31; --line:#353a44;
+    --text:#e3e6eb; --muted:#9aa2af; --dim:#6d7583;
+    --accent:#3d8bfd; --accent-2:#2f6fd0; --good:#33c173; --warn:#f0a52a; --bad:#ef4c5d;
+    --radius:10px; --wrap:1100px;
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font:16px/1.6 "Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--accent); text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:var(--wrap); margin:0 auto; padding:0 20px}
+
+  /* ---------- header ---------- */
+  header{position:sticky; top:0; z-index:10; background:rgba(23,25,30,.86);
+    backdrop-filter:blur(8px); border-bottom:1px solid var(--line)}
+  .bar{display:flex; align-items:center; gap:20px; height:62px}
+  .bar img{height:30px; width:auto; display:block}
+  nav{margin-left:auto; display:flex; gap:22px; align-items:center; flex-wrap:wrap}
+  nav a{color:var(--muted); font-size:14.5px; font-weight:600}
+  nav a:hover{color:var(--text); text-decoration:none}
+
+  /* ---------- hero ---------- */
+  .hero{padding:72px 0 8px; text-align:center}
+  h1{font-size:clamp(30px,5vw,50px); line-height:1.12; margin:0 0 18px; letter-spacing:-.02em}
+  h1 .acc{color:var(--accent)}
+  .lede{font-size:clamp(16px,2.1vw,19.5px); color:var(--muted); max-width:680px; margin:0 auto 28px}
+  .cta{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-bottom:14px}
+  .btn{display:inline-flex; align-items:center; gap:9px; padding:12px 22px; border-radius:var(--radius);
+    font-weight:650; font-size:15px; border:1px solid var(--line); background:var(--panel-2); color:var(--text)}
+  .btn:hover{background:var(--panel); text-decoration:none; border-color:var(--dim)}
+  .btn.primary{background:var(--accent); border-color:var(--accent); color:#fff}
+  .btn.primary:hover{background:var(--accent-2); border-color:var(--accent-2)}
+  .meta{color:var(--dim); font-size:13.5px}
+  .meta b{color:var(--muted); font-weight:600}
+
+  /* ---------- shot ---------- */
+  .shot{margin:40px auto 0; max-width:1000px; padding:0 20px}
+  .shot img{width:100%; height:auto; display:block; border:1px solid var(--line);
+    border-radius:12px; box-shadow:0 24px 70px rgba(0,0,0,.55)}
+  .caption{text-align:center; color:var(--dim); font-size:13px; margin-top:12px}
+
+  /* ---------- sections ---------- */
+  section{padding:68px 0}
+  h2{font-size:clamp(23px,3.2vw,31px); margin:0 0 10px; letter-spacing:-.01em}
+  .sub{color:var(--muted); margin:0 0 34px; max-width:700px}
+
+  .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(265px,1fr)); gap:16px}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:20px 20px 22px}
+  .card h3{margin:0 0 8px; font-size:16.5px; display:flex; align-items:center; gap:9px}
+  .card p{margin:0; color:var(--muted); font-size:14.5px}
+  .ic{width:22px; height:22px; flex:none; color:var(--accent)}
+
+  .alt{background:var(--panel)}
+  .alt .card{background:var(--panel-2)}
+
+  /* ---------- ai ---------- */
+  .ai-list{display:grid; gap:12px; margin:0 0 22px; padding:0; list-style:none}
+  .ai-list li{background:var(--panel-2); border:1px solid var(--line); border-radius:var(--radius); padding:15px 18px}
+  .ai-list b{display:block; margin-bottom:3px}
+  .ai-list span{color:var(--muted); font-size:14.5px}
+  .pill{display:inline-block; font-size:11.5px; font-weight:700; letter-spacing:.4px; text-transform:uppercase;
+    padding:3px 9px; border-radius:20px; background:#2d3b58; color:#9cc0ff; margin-bottom:14px}
+
+  /* ---------- download ---------- */
+  .dl{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; margin-bottom:22px}
+  .dl .card{display:flex; flex-direction:column; gap:12px}
+  .dl .btn{justify-content:center; margin-top:auto}
+  .req{color:var(--dim); font-size:13.5px; margin:0}
+
+  /* ---------- notices ---------- */
+  .note{border:1px solid var(--line); background:var(--panel-2); border-radius:var(--radius);
+    padding:16px 18px; color:var(--muted); font-size:14.5px}
+  .note.warn{border-color:#6a5220; background:#2b2518; color:#f3c877}
+  .note.warn b{color:#ffd98a}
+
+  /* ---------- footer ---------- */
+  footer{border-top:1px solid var(--line); padding:34px 0 46px; color:var(--dim); font-size:13.5px}
+  .fgrid{display:flex; gap:28px; flex-wrap:wrap; justify-content:space-between}
+  footer a{color:var(--muted)}
+  footer p{margin:0 0 8px; max-width:620px}
+
+  @media (max-width:640px){
+    .bar{height:auto; padding:12px 0; flex-wrap:wrap; gap:12px}
+    nav{margin-left:0; width:100%; gap:16px}
+    section{padding:52px 0}
+    .hero{padding:48px 0 0}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap bar">
+    <img src="assets/wordmark.png" alt="Crafter Studio">
+    <nav>
+      <a href="#features">Features</a>
+      <a href="#ai">AI</a>
+      <a href="#download">Download</a>
+      <a href="https://github.com/raghukumarkotikala/Crafter">Source</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero wrap">
+  <h1>Design your work.<br>Then <span class="acc">run your laser</span>.</h1>
+  <p class="lede">
+    A desktop studio for laser engravers and cutters. Draw or import your design, set per-layer
+    power and speed, preview the toolpath, and drive the machine over USB — all in one app.
+    Free and open source.
+  </p>
+  <div class="cta">
+    <a class="btn primary" href="#download">Download for Windows</a>
+    <a class="btn" href="#download">Download for Linux</a>
+  </div>
+  <p class="meta"><b>Free &amp; open source</b> · ISC licence · Windows &amp; Linux · no account, no telemetry</p>
+</div>
+
+<div class="shot">
+  <img src="assets/screenshot.png" alt="The Crafter Studio workspace: a mandala laid out on a 170 × 200 mm work area, with layer power, speed and scan settings in the right-hand panel.">
+  <p class="caption">A 120 mm mandala placed on a Creality CV-01 Pro bed, with engrave settings on the active layer.</p>
+</div>
+
+<section id="features" class="alt">
+  <div class="wrap">
+    <h2>Everything between the idea and the burn</h2>
+    <p class="sub">Crafter Studio covers the whole job: drawing, layout, machine settings, G-code and the run itself.</p>
+    <div class="grid">
+
+      <div class="card">
+        <h3><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18z"/><path d="M2 2l7.6 7.6"/><circle cx="11" cy="11" r="2"/></svg>Vector drawing</h3>
+        <p>Rectangles, ellipses, polygons, stars, Bézier pen, freehand pencil and node editing. Text in any installed font, converted to outlines.</p>
+      </div>
+
+      <div class="card">
+        <h3><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h10v6h6v10H10v-6H4z"/></svg>Path operations</h3>
+        <p>Union, difference, intersection, exclusion, divide and offset. Grid and circular arrays, align and distribute, full undo history.</p>
+      </div>
+
+      <div class="card">
+        <h3><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Import anything</h3>
+        <p>SVG with real units, DXF with arcs, splines and blocks, and bitmaps with dithering and trace-to-vector. Drag and drop works.</p>
+      </div>
+
+      <div class="card">
+        <h3><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 15.4 7.2 17.9l.9-5.4-3.9-3.8 5.4-.8z"/><path d="M4 21h16"/></svg>Built-in art library</h3>
+        <p>215 ready-to-cut pieces — mandalas, frames, festival and celebration designs — plus over 13,000 searchable icons. Keep your own files in My Library.</p>
+      </div>
+
+      <div class="card">
+        <h3><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Layer-based output</h3>
+        <p>30 colour layers in the familiar style. Each carries its own mode, power, speed, passes, line interval, scan angle, overscan and air assist.</p>
+      </div>
+
+      <div class="card">
+        <h3><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l8-4 8 4-8 4z"/><path d="M4 12l8 4 8-4M4 17l8 4 8-4"/></svg>Material library</h3>
+        <p>Starting points for wood, acrylic, leather, paper, slate, glass, metals and 3D-printing filaments — with a test-grid generator to dial them in.</p>
+      </div>
+
+      <div class="card">
+        <h3><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Smart G-code</h3>
+        <p>GRBL, grblHAL/FluidNC, Marlin and Smoothieware. Cuts inner shapes before outer, shortens travel, estimates job time, previews the toolpath.</p>
+      </div>
+
+      <div class="card">
+        <h3><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v14M8 6l4-4 4 4M7 11v2a3 3 0 0 0 3 3h4a3 3 0 0 0 3-3v-2"/><circle cx="12" cy="19" r="2.5"/></svg>Drive it over USB</h3>
+        <p>Connect, jog, home, set origin, frame the job and run it with live progress and a console. Around 380 machine profiles from 46 brands.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section id="ai">
+  <div class="wrap">
+    <span class="pill">Optional · bring your own key</span>
+    <h2>An AI that speaks laser</h2>
+    <p class="sub">
+      Describe what you want and get geometry that is actually cuttable — closed contours, sane
+      feature sizes, and colours already mapped to the right layers.
+    </p>
+    <ul class="ai-list">
+      <li><b>Generate a design</b><span>Type a description, get laser-ready vectors sized in millimetres and placed straight on the canvas. Cut lines land blue, engraved areas black, score lines red.</span></li>
+      <li><b>Change what you drew</b><span>Select something and ask in plain language — “turn this into a stencil”, “add a 3 mm border and a hanging hole”. Undo puts it back.</span></li>
+      <li><b>Suggest material settings</b><span>Describe your material and get starting-point power, speed and passes for your machine’s actual wattage, ready to apply to a layer.</span></li>
+    </ul>
+    <div class="note">
+      Works with <b>Anthropic</b>, any <b>OpenAI-compatible</b> endpoint, or <b>Ollama</b> running on your
+      own machine — Crafter Studio reads your installed models and lists them for you. Nothing is sent anywhere
+      until you add a key, and keys are encrypted with your system keyring. With Ollama, nothing leaves
+      your computer at all.
+    </div>
+  </div>
+</section>
+
+<section id="download" class="alt">
+  <div class="wrap">
+    <h2>Download Crafter Studio</h2>
+    <p class="sub">Current release: <b>1.2.0</b>. No installer bundling, no account, no telemetry.</p>
+    <div class="dl">
+      <div class="card">
+        <h3>Windows</h3>
+        <p>Installer (choose your folder) or a portable <code>.exe</code> that runs from anywhere, including a USB stick.</p>
+        <a class="btn primary" href="https://github.com/raghukumarkotikala/Crafter/releases/latest">Get the latest release</a>
+      </div>
+      <div class="card">
+        <h3>Linux</h3>
+        <p>A single x86-64 AppImage. Mark it executable and run it — no installation, no dependencies to chase.</p>
+        <a class="btn primary" href="https://github.com/raghukumarkotikala/Crafter/releases/latest">Get the latest release</a>
+      </div>
+      <div class="card">
+        <h3>Build from source</h3>
+        <p>Node 22 and npm 10, then <code>npm install</code> and <code>npm run dist</code>. The full source is on GitHub under the ISC licence.</p>
+        <a class="btn" href="https://github.com/raghukumarkotikala/Crafter">View the repository</a>
+      </div>
+    </div>
+    <p class="req">
+      Windows 10 or later, or a 64-bit Linux desktop. Direct machine control needs a controller that speaks
+      GRBL, grblHAL/FluidNC, Marlin or Smoothieware over USB. Ruida, Trocen, TopWisdom, galvo and
+      cloud-only machines are supported for design and SVG export, not direct control.
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="note warn">
+      <b>Lasers burn things.</b> Always wear eye protection rated for your laser’s wavelength, never leave a
+      running machine unattended, and keep a fire extinguisher nearby. Material settings and AI-generated
+      designs are starting points, not verified results — check the geometry and test on scrap before
+      committing to a real piece. Some materials, including PVC and anything chlorinated, release toxic gas
+      and must never be lasered.
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap fgrid">
+    <div>
+      <p><b>Crafter Studio</b> — laser engraving &amp; cutting design and control studio.</p>
+      <p>Released under the ISC licence with no warranty. Built with Electron, paper.js, opentype.js,
+         dxf-parser and imagetracerjs. Icons from Tabler Icons (MIT) and Material Design Icons (Apache-2.0).</p>
+      <p>Machine brand and model names identify compatible hardware only. Crafter Studio is not affiliated with,
+         or endorsed by, any machine manufacturer.</p>
+    </div>
+    <div>
+      <p><a href="https://github.com/raghukumarkotikala/Crafter">GitHub</a></p>
+      <p><a href="https://github.com/raghukumarkotikala/Crafter/releases">Releases</a></p>
+      <p><a href="https://github.com/raghukumarkotikala/Crafter/issues">Report an issue</a></p>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

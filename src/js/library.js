@@ -230,8 +230,8 @@ export async function renderLibraryTab(body) {
     grid.append(h('div', { class: 'note warn', style: { gridColumn: '1/-1' } }, 'Could not load library: ' + e.message));
     return;
   }
-  if (ui.source === 'art') footer.textContent = 'Crafter laser art · free to use in your projects';
-  if (ui.source === 'mine') footer.textContent = 'Your files are stored in the Crafter data folder.';
+  if (ui.source === 'art') footer.textContent = 'Crafter Studio laser art · free to use in your projects';
+  if (ui.source === 'mine') footer.textContent = 'Your files are stored in the Crafter Studio data folder.';
 
   catSel.append(h('option', { value: '' }, `All categories (${categories.length})`), ...categories.map(c => h('option', { value: c }, c)));
   catSel.value = ui.category;

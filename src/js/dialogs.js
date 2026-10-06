@@ -59,8 +59,8 @@ export function openProfileDialog({ welcome = false } = {}) {
     formEl.innerHTML = '';
     const ctl = CONTROLLERS[draft.controller] || CONTROLLERS.grbl;
     appendAll(formEl,
-      welcome ? h('img', { class: 'logo-hero', src: 'assets/logo.png', alt: 'Crafter', style: { width: '140px', height: '140px' } }) : null,
-      welcome ? h('div', { class: 'note' }, 'Welcome to Crafter! Pick your machine from the list (or build a custom one), check the work area, then press “Use this machine”. You can change it any time from the device button in the top bar.') : null,
+      welcome ? h('img', { class: 'logo-hero', src: 'assets/logo.png', alt: 'Crafter Studio', style: { width: '140px', height: '140px' } }) : null,
+      welcome ? h('div', { class: 'note' }, 'Welcome to Crafter Studio! Pick your machine from the list (or build a custom one), check the work area, then press “Use this machine”. You can change it any time from the device button in the top bar.') : null,
       h('div', { class: 'sec-h' }, 'Machine'),
       row('Name', h('input', { class: 'inp', value: draft.name, onChange: e => { draft.name = e.target.value; } })),
       row('Laser type', select(LASER_TYPES, draft.type, v => set('type', v))),
@@ -79,7 +79,7 @@ export function openProfileDialog({ welcome = false } = {}) {
         draft.laserMode = v === 'grbl-m3' ? 'M3' : 'M4';
         renderForm();
       })),
-      !ctl.direct ? h('div', { class: 'note warn' }, 'This controller is not directly supported. Crafter can still design for this machine at the correct size and export SVG for the manufacturer\'s software (or LightBurn). If your machine has been upgraded to GRBL, pick GRBL above.') : null,
+      !ctl.direct ? h('div', { class: 'note warn' }, 'This controller is not directly supported. Crafter Studio can still design for this machine at the correct size and export SVG for the manufacturer\'s software (or LightBurn). If your machine has been upgraded to GRBL, pick GRBL above.') : null,
       ctl.direct ? row('Baud rate', select({ 9600: '9600', 57600: '57600', 115200: '115200', 230400: '230400', 250000: '250000', 921600: '921600' }, String(draft.baud), v => { draft.baud = +v; })) : null,
       ctl.gcode ? row('Max S value', num(draft.sMax, v => { draft.sMax = v; }, { min: 0.01, unit: 'S' })) : null,
       ctl.gcode && draft.controller !== 'smoothie' && draft.controller !== 'marlin' ? row('Laser mode', seg({ M4: 'M4 dynamic', M3: 'M3 constant' }, draft.laserMode, v => set('laserMode', v))) : null,
@@ -171,7 +171,7 @@ export function openPortChooser(list) {
 export async function openTextDialog(item, at) {
   const fonts = await listFonts();
   const spec = item && item.data.text ? { ...item.data.text } : {
-    content: 'Crafter', font: await defaultFontPath(), size: 12, letterSpacing: 0, lineSpacing: 1.2, align: 'left'
+    content: 'Crafter Studio', font: await defaultFontPath(), size: 12, letterSpacing: 0, lineSpacing: 1.2, align: 'left'
   };
   if (!fonts.length && !spec.font) {
     const note = h('div', {}, h('div', { class: 'note warn' }, 'No system fonts were found. Load a .ttf or .otf file to continue.'));
@@ -477,15 +477,15 @@ export function openShortcuts() {
 export async function openAbout() {
   const version = window.api && window.api.appVersion ? await window.api.appVersion() : '';
   openModal({
-    title: 'About Crafter', width: '480px',
+    title: 'About Crafter Studio', width: '480px',
     body: h('div', {},
-      h('img', { class: 'logo-hero', src: 'assets/logo.png', alt: 'Crafter' }),
-      h('p', { class: 'center' }, h('b', {}, 'Crafter'), version ? ` ${version}` : '', ' — laser design & control studio.'),
+      h('img', { class: 'logo-hero', src: 'assets/logo.png', alt: 'Crafter Studio' }),
+      h('p', { class: 'center' }, h('b', {}, 'Crafter Studio'), version ? ` ${version}` : '', ' — laser design & control studio.'),
       h('p', { class: 'muted' }, `Machine database: ${MACHINES.length} profiles from ${BRANDS.length} brands, plus unlimited custom profiles.`),
       h('p', { class: 'muted' }, 'Direct USB control: GRBL, grblHAL/FluidNC, Marlin, Smoothieware. Other controllers: design and export.'),
       h('p', { class: 'muted small' }, 'Built with Electron, paper.js, opentype.js, dxf-parser and imagetracerjs.'),
       h('p', { class: 'muted small' }, 'Library icons: Tabler Icons (MIT, © Paweł Kuna) and Material Design Icons (Apache-2.0, Pictogrammers).'),
-      h('p', { class: 'muted small' }, 'Crafter is released under the ISC licence and comes with no warranty.'),
+      h('p', { class: 'muted small' }, 'Crafter Studio is released under the ISC licence and comes with no warranty.'),
       h('div', { class: 'note warn' }, 'Laser safety: always wear eye protection rated for your laser\'s wavelength, never leave a running laser unattended, and keep a fire extinguisher nearby.')),
     buttons: [{ label: 'Close', primary: true }]
   });

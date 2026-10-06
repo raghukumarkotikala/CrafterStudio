@@ -59,7 +59,7 @@ function buildTopbar() {
   const dev = state.device;
   const ctl = CONTROLLERS[dev.controller] || CONTROLLERS.grbl;
   tb.append(
-    h('div', { class: 'brand', title: 'About Crafter', onClick: () => run('help.about') }, h('img', { src: 'assets/wordmark.png', alt: 'Crafter' })),
+    h('div', { class: 'brand', title: 'About Crafter Studio', onClick: () => run('help.about') }, h('img', { src: 'assets/wordmark.png', alt: 'Crafter Studio' })),
     h('div', { class: 'tb-group' },
       ibtn('new', 'New project (Ctrl+N)', () => run('file.new')),
       ibtn('open', 'Open project (Ctrl+O)', () => run('file.open')),
@@ -440,7 +440,7 @@ function renderMachineTab(body) {
       h('div', { class: 'muted' }, ctl.label))));
 
   if (!ctl.direct) {
-    body.append(h('div', { class: 'note warn' }, 'This machine uses a controller Crafter cannot drive directly. Design at the correct size here, then use Export SVG and open the file in the manufacturer\'s software (or LightBurn).'),
+    body.append(h('div', { class: 'note warn' }, 'This machine uses a controller Crafter Studio cannot drive directly. Design at the correct size here, then use Export SVG and open the file in the manufacturer\'s software (or LightBurn).'),
       h('button', { class: 'btn primary', onClick: () => run('file.exportSvg'), html: icon('export') + 'Export SVG' }));
     return;
   }

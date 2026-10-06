@@ -1,4 +1,4 @@
-// Crafter renderer entry point.
+// Crafter Studio renderer entry point.
 /* global paper */
 import { state, setDirty } from './state.js';
 import { initEditor, ed, updateSelectionBox, pushHistory, clearSelection } from './editor.js';

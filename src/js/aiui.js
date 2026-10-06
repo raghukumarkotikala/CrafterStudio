@@ -59,7 +59,7 @@ export function renderAITab(body) {
 
   if (!ready) {
     body.appendChild(h('div', { class: 'note' },
-      'Crafter can generate laser-ready artwork from a description, restyle what you have drawn, and suggest cut settings. Add your own API key to switch it on — requests go straight from this machine to the provider you choose.'));
+      'Crafter Studio can generate laser-ready artwork from a description, restyle what you have drawn, and suggest cut settings. Add your own API key to switch it on — requests go straight from this machine to the provider you choose.'));
     body.appendChild(h('button', { class: 'btn primary wide', onClick: openAISettings }, 'Set up AI…'));
     return;
   }

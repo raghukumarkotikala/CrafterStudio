@@ -197,7 +197,7 @@ export function sanitizeSVG(text) {
   return new XMLSerializer().serializeToString(root);
 }
 
-// Crafter reads the root width unit to decide real-world scale. Force
+// Crafter Studio reads the root width unit to decide real-world scale. Force
 // "1 user unit = 1 mm" so generated work lands at the size the model intended.
 function normalizeToMillimetres(root) {
   const numeric = v => {
@@ -233,7 +233,7 @@ export function extractSVG(text) {
 }
 
 // ---------------------------------------------------------------- prompts
-// Crafter maps SVG colours onto its palette layers, so naming exact hexes puts
+// Crafter Studio maps SVG colours onto its palette layers, so naming exact hexes puts
 // generated geometry straight onto a correctly configured layer:
 //   #000000 → layer 1 (Fill / engrave)   #0000ff → layer 2 (Line / cut)   #ff0000 → layer 3 (Line / score)
 const LASER_RULES = `You produce vector artwork for laser cutters and engravers. Output is fed directly into a CAM program.
