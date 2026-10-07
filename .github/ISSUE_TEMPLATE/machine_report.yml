@@ -1,0 +1,51 @@
+name: Machine report — did it work with yours?
+description: Tell us whether Crafter Studio drove your machine correctly
+labels: ["machine-report"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Crafter Studio ships around 380 machine profiles, but only a handful have
+        been tested against real hardware. Reports like this are the only way the
+        rest get verified — **including reports that everything worked**.
+  - type: input
+    id: machine
+    attributes:
+      label: Machine
+      placeholder: Creality CV-01 Pro (1.6W), or "custom profile, 400×400, GRBL"
+    validations:
+      required: true
+  - type: dropdown
+    id: profile-source
+    attributes:
+      label: Profile used
+      options:
+        - Built-in profile, used as-is
+        - Built-in profile, but I had to change something
+        - Custom profile I made myself
+    validations:
+      required: true
+  - type: checkboxes
+    id: worked
+    attributes:
+      label: What worked?
+      options:
+        - label: Connected over USB
+        - label: Jog / home / set origin
+        - label: Frame traced the right area
+        - label: Cut or engraved at the right size
+        - label: Start / pause / stop behaved correctly
+  - type: textarea
+    id: wrong
+    attributes:
+      label: Anything wrong?
+      description: Wrong size, mirrored or rotated output, wrong origin corner, speed or power ignored, connection dropping.
+    validations:
+      required: false
+  - type: textarea
+    id: settings
+    attributes:
+      label: Settings that worked for you
+      description: Material, thickness, power, speed, passes. These help other people with the same machine.
+    validations:
+      required: false

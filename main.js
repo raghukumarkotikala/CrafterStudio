@@ -158,6 +158,10 @@ function buildMenu() {
       label: 'Help',
       submenu: [
         item('Keyboard Shortcuts', 'help.shortcuts', 'F1'),
+        { type: 'separator' },
+        item('Report a Problem…', 'help.report'),
+        item('Visit Website', 'help.website'),
+        { type: 'separator' },
         item('About Crafter Studio', 'help.about')
       ]
     }
@@ -228,6 +232,11 @@ ipcMain.on('serial:choose', (e, portId) => {
 });
 
 ipcMain.handle('app:version', () => app.getVersion());
+
+// Only ever hand http(s) to the OS handler — never file:// or custom schemes.
+ipcMain.handle('app:openExternal', (e, url) => {
+  if (typeof url === 'string' && /^https?:\/\//i.test(url)) shell.openExternal(url);
+});
 
 ipcMain.on('app:dirty', (e, value) => {
   dirty = !!value;

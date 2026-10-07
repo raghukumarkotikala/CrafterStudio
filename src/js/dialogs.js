@@ -7,6 +7,7 @@ import { MATERIAL_SETS, materialSetFor } from './materials.js';
 import { ed, drawWorkArea, fitWorkArea, addItem, pushHistory, select as selectItems, styleItem } from './editor.js';
 import { buildTextPath, listFonts, defaultFontPath, registerFontBuffer } from './text.js';
 import * as ops from './ops.js';
+import { machine } from './machine.js';
 
 // ================================================================ machine profile
 export function openProfileDialog({ welcome = false } = {}) {
@@ -474,6 +475,58 @@ export function openShortcuts() {
   });
 }
 
+export const REPO_URL = 'https://github.com/raghukumarkotikala/CrafterStudio';
+export const SITE_URL = 'https://www.crafterstudio.in';
+
+export function openWebsite() {
+  if (window.api) window.api.openExternal(SITE_URL);
+}
+
+// Opens a pre-filled bug report on GitHub. Nothing leaves the app by itself:
+// the details are shown here first and the user submits them.
+export async function openReportProblem() {
+  const version = window.api && window.api.appVersion ? await window.api.appVersion() : 'unknown';
+  const dev = state.device || {};
+  const ctl = CONTROLLERS[dev.controller] || {};
+  const ua = navigator.userAgent;
+  const grab = re => (ua.match(re) || [null, '?'])[1];
+  const os = /Windows/.test(ua) ? 'Windows' : /Mac OS X/.test(ua) ? 'macOS' : /Linux/.test(ua) ? 'Linux' : 'unknown';
+
+  const details = [
+    `Crafter Studio ${version}`,
+    `${os} \u00b7 Electron ${grab(/Electron\/([\d.]+)/)} \u00b7 Chromium ${grab(/Chrome\/([\d.]+)/)}`,
+    `Machine: ${dev.name || '(none selected)'}`,
+    `Controller: ${ctl.label || dev.controller || '?'} \u00b7 ${dev.workW || '?'}\u00d7${dev.workH || '?'} mm \u00b7 ${dev.power || '?'} W ${String(dev.type || '').toUpperCase()}`,
+    `Origin: ${dev.origin || '?'} \u00b7 Job start: ${dev.jobOrigin || '?'}`,
+    `Connection: ${machine.connected ? 'connected (' + ((machine.status && machine.status.state) || 'idle') + ')' : 'not connected'}`
+  ].join('\n');
+
+  const url = `${REPO_URL}/issues/new?template=bug_report.yml&environment=${encodeURIComponent(details)}`;
+
+  const box = h('textarea', { class: 'inp', rows: 7, readonly: true, style: { fontFamily: 'ui-monospace, monospace', fontSize: '12px' } }, details);
+  box.addEventListener('keydown', e => e.stopPropagation());
+
+  openModal({
+    title: 'Report a problem',
+    width: '580px',
+    body: h('div', {},
+      h('div', { class: 'note' },
+        'This opens a pre-filled report on GitHub in your browser. Nothing is sent from Crafter Studio itself \u2014 you can edit anything before posting. A free GitHub account is needed to submit.'),
+      h('div', { class: 'sec-h' }, 'Details that will be filled in'),
+      box,
+      h('div', { class: 'small muted', style: { marginTop: '6px' } },
+        'Only the above is included. Your designs, file names and project contents are not.')),
+    buttons: [
+      { label: 'Copy details', onClick: () => {
+        navigator.clipboard.writeText(details).then(() => toast('Copied.'), () => toast('Could not copy.', 'err'));
+        return false;
+      } },
+      { label: 'Cancel' },
+      { label: 'Open GitHub', primary: true, onClick: () => { if (window.api) window.api.openExternal(url); } }
+    ]
+  });
+}
+
 export async function openAbout() {
   const version = window.api && window.api.appVersion ? await window.api.appVersion() : '';
   openModal({
@@ -486,6 +539,9 @@ export async function openAbout() {
       h('p', { class: 'muted small' }, 'Built with Electron, paper.js, opentype.js, dxf-parser and imagetracerjs.'),
       h('p', { class: 'muted small' }, 'Library icons: Tabler Icons (MIT, © Paweł Kuna) and Material Design Icons (Apache-2.0, Pictogrammers).'),
       h('p', { class: 'muted small' }, 'Crafter Studio is released under the ISC licence and comes with no warranty.'),
+      h('p', { class: 'center' },
+        h('button', { class: 'btn', onClick: openWebsite }, 'crafterstudio.in'),
+        h('button', { class: 'btn', style: { marginLeft: '8px' }, onClick: () => { if (window.api) window.api.openExternal(REPO_URL); } }, 'Source on GitHub')),
       h('div', { class: 'note warn' }, 'Laser safety: always wear eye protection rated for your laser\'s wavelength, never leave a running laser unattended, and keep a fire extinguisher nearby.')),
     buttons: [{ label: 'Close', primary: true }]
   });

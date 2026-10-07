@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Question, or sharing material settings
+    url: https://github.com/raghukumarkotikala/CrafterStudio/discussions
+    about: For questions and swapping settings that worked. Issues are for bugs and requests.
+  - name: Website and downloads
+    url: https://www.crafterstudio.in
+    about: Latest release for Windows and Linux.

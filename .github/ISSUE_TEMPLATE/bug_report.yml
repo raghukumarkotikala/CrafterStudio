@@ -1,0 +1,37 @@
+name: Bug report
+description: Something in Crafter Studio does not work as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this.
+
+        If the laser did something unsafe — fired unexpectedly, ignored Stop, moved
+        outside the work area — please say so in the first line. Those come first.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead.
+      placeholder: |
+        1. Opened an SVG
+        2. Set layer 1 to Fill, 40% power, 3000 mm/min
+        3. Pressed Start — the laser homed, then stopped
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Version and machine
+      description: Filled in automatically when you use Help → Report a Problem in the app.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Screenshots, the G-code it produced, console output, the file that triggered it. Drag files in here.
+    validations:
+      required: false

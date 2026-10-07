@@ -81,6 +81,8 @@ export const cmds = {
   'ai.materials': aiui.openAdvisor,
   'ai.settings': aiui.openAISettings,
 
+  'help.report': dlg.openReportProblem,
+  'help.website': dlg.openWebsite,
   'help.shortcuts': dlg.openShortcuts,
   'help.about': dlg.openAbout
 };
