@@ -275,3 +275,22 @@ kbd { background: var(--panel-3); border: 1px solid var(--line); border-radius: 
 .badge.danger { background: #4a1f26; color: #ff9aa5; }
 tr.danger-row td { background: #2b1a1d; border-bottom: 1px solid #4a1f26; }
 table.tbl td small { font-size: 11px; line-height: 1.3; margin-top: 2px; }
+
+/* ------------------------------------------------ help browser */
+.help { display: grid; grid-template-columns: 220px 1fr; gap: 16px; height: 66vh; min-height: 420px; }
+.help-nav { display: flex; flex-direction: column; min-height: 0; }
+.help-list { flex: 1; overflow-y: auto; margin-top: 8px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel-2); }
+.help-item { padding: 8px 10px; border-bottom: 1px solid var(--line); cursor: pointer; font-size: 12.5px; }
+.help-item:last-child { border-bottom: 0; }
+.help-item:hover { background: var(--panel-3); }
+.help-item.sel { background: var(--accent); color: #fff; font-weight: 600; }
+.help-body { overflow-y: auto; padding-right: 6px; line-height: 1.55; user-select: text; }
+.help-body h3 { margin: 0 0 12px; font-size: 19px; }
+.help-body h4 { margin: 18px 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
+.help-body p { margin: 0 0 10px; }
+.help-body ul, .help-body ol { margin: 0 0 10px; padding-left: 20px; }
+.help-body li { margin-bottom: 5px; }
+.help-body code { background: var(--panel-3); padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+.help-body .tbl { margin: 8px 0 12px; }
+.help-body .tbl td { vertical-align: top; }
+.help-body .note { margin: 12px 0; }

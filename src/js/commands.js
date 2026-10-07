@@ -7,6 +7,7 @@ import * as dlg from './dialogs.js';
 import * as jobs from './jobs.js';
 import { setTool, TOOLS } from './tools.js';
 import * as aiui from './aiui.js';
+import { openHelp } from './help.js';
 import { showTab } from './ui.js';
 
 export const cmds = {
@@ -81,6 +82,8 @@ export const cmds = {
   'ai.materials': aiui.openAdvisor,
   'ai.settings': aiui.openAISettings,
 
+  'help.contents': () => openHelp(),
+  'help.safety': () => openHelp('safety'),
   'help.report': dlg.openReportProblem,
   'help.website': dlg.openWebsite,
   'help.shortcuts': dlg.openShortcuts,

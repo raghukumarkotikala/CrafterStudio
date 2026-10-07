@@ -47,7 +47,7 @@ function onKey(e) {
 
   if (MENU_OWNED.has(combo)) {
     if (window.api) return;
-    const map = { 'ctrl+n': 'file.new', 'ctrl+o': 'file.open', 'ctrl+s': 'file.save', 'ctrl+shift+s': 'file.saveAs', 'ctrl+i': 'file.import', 'ctrl+e': 'file.exportGcode', f5: 'job.start', 'alt+p': 'job.preview', 'ctrl+shift+m': 'machine.profile', f1: 'help.shortcuts' };
+    const map = { 'ctrl+n': 'file.new', 'ctrl+o': 'file.open', 'ctrl+s': 'file.save', 'ctrl+shift+s': 'file.saveAs', 'ctrl+i': 'file.import', 'ctrl+e': 'file.exportGcode', f5: 'job.start', 'alt+p': 'job.preview', 'ctrl+shift+m': 'machine.profile', f1: 'help.contents' };
     e.preventDefault();
     run(map[combo]);
     return;

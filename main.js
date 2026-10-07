@@ -157,7 +157,9 @@ function buildMenu() {
     {
       label: 'Help',
       submenu: [
-        item('Keyboard Shortcuts', 'help.shortcuts', 'F1'),
+        item('Help Contents', 'help.contents', 'F1'),
+        item('Keyboard Shortcuts', 'help.shortcuts'),
+        item('Laser Safety', 'help.safety'),
         { type: 'separator' },
         item('Report a Problem…', 'help.report'),
         item('Visit Website', 'help.website'),
