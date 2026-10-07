@@ -12,9 +12,10 @@
   "scripts": {
     "start": "electron .",
     "library": "node scripts/build-library.js",
-    "dist": "npm run library && electron-builder --win --x64",
-    "dist:linux": "npm run library && electron-builder --linux AppImage --x64",
-    "dist:all": "npm run library && electron-builder --win --linux --x64",
+    "guide": "node --no-warnings scripts/build-guide.mjs",
+    "dist": "npm run library && npm run guide && electron-builder --win --x64",
+    "dist:linux": "npm run library && npm run guide && electron-builder --linux AppImage --x64",
+    "dist:all": "npm run library && npm run guide && electron-builder --win --linux --x64",
     "dist:dir": "electron-builder --dir"
   },
   "author": "Crafter Studio",

@@ -46,6 +46,10 @@ Ruida, Trocen, TopWisdom, M2 Nano, EZCAD galvo and cloud/proprietary machines (G
 
 Profile specs are nominal manufacturer figures — verify your machine's work area and origin.
 
+## Documentation
+
+The manual lives in `src/js/help-content.js` and is rendered twice from that single source: in the app under **Help → Help Contents** (F1), and as [crafterstudio.in/guide](https://www.crafterstudio.in/guide.html) via `npm run guide`, which writes `docs/guide.html`. Edit the topics, not the generated page — the release scripts rebuild it.
+
 ## Licence
 
 Crafter Studio is released under the [ISC licence](LICENSE) and comes with no warranty. You operate your machine at your own risk: always wear eye protection rated for your laser's wavelength, never leave a running laser unattended, and keep a fire extinguisher nearby.
