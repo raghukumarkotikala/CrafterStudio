@@ -60,6 +60,7 @@ export async function buildTextPath(spec, at) {
   const cp = new paper.CompoundPath({ insert: false });
   const lineWidths = [];
   const linePaths = [];
+  const badGlyphs = new Set();
 
   lines.forEach((line, li) => {
     const glyphs = font.stringToGlyphs(line);
@@ -68,13 +69,22 @@ export async function buildTextPath(spec, at) {
     for (let i = 0; i < glyphs.length; i++) {
       const g = glyphs[i];
       const p = g.getPath(x, li * lineH, size);
-      pathData.push(p.toPathData(3));
+      const d = p.toPathData(3);
+      // Some fonts yield non-finite coordinates for a glyph. "NaN" in path data
+      // parses as an arc command and crashes the importer, and quietly dropping
+      // the glyph would engrave a word with a letter missing — so refuse it.
+      if (/NaN|Infinity/.test(d)) badGlyphs.add(g.name || (g.unicode ? String.fromCodePoint(g.unicode) : '?'));
+      else pathData.push(d);
       x += g.advanceWidth * scale + tracking;
       if (i < glyphs.length - 1) x += font.getKerningValue(g, glyphs[i + 1]) * scale;
     }
     lineWidths.push(Math.max(0, x - tracking));
     linePaths.push(pathData.join(' '));
   });
+
+  if (badGlyphs.size) {
+    throw new Error(`This font produced invalid outlines for: ${[...badGlyphs].join(', ')}. Choose a different font.`);
+  }
 
   const maxW = Math.max(...lineWidths, 0);
   linePaths.forEach((d, li) => {
