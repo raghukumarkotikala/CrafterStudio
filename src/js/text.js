@@ -1,17 +1,27 @@
 // Text → vector outlines using opentype.js and installed system fonts.
 /* global opentype, paper */
 import { warpItem, isIdentityQuad, arcItem } from './warp.js';
+import { loadStrokeFonts, strokeFontEntries, isStrokeFont, buildStrokeGlyphs } from './strokefont.js';
 
 const cache = new Map();
 let fontList = null;
 
 export async function listFonts() {
   if (fontList) return fontList;
+  let system = [];
   try {
-    fontList = window.api ? await window.api.listFonts() : [];
+    system = window.api ? await window.api.listFonts() : [];
   } catch {
-    fontList = [];
+    system = [];
   }
+  let stroke = [];
+  try {
+    stroke = strokeFontEntries(await loadStrokeFonts());
+  } catch {
+    stroke = [];   // packed bundle missing: carry on with system fonts only
+  }
+  // Single-line faces first: they are the ones worth reaching for when engraving.
+  fontList = [...stroke, ...system];
   return fontList;
 }
 
@@ -40,6 +50,10 @@ export async function defaultFontPath() {
     const f = fonts.find(x => x.name === p);
     if (f) return f.path;
   }
+  // Single-line faces are listed first for visibility, but they must never
+  // become the default — new text should be an ordinary outline font.
+  const system = fonts.filter(f => !isStrokeFont(f.path));
+  if (system.length) return system[0].path;
   return fonts.length ? fonts[0].path : null;
 }
 
@@ -52,8 +66,9 @@ export async function defaultFontPath() {
  *                   reproduced in the same place when the words change }
  */
 export async function buildTextPath(spec, at) {
-  const font = await loadFont(spec.font);
   const size = Math.max(0.5, +spec.size || 10);
+  if (isStrokeFont(spec.font)) return finishTextPath(await buildStrokeGlyphs(spec), spec, size, at);
+  const font = await loadFont(spec.font);
   const lines = String(spec.content || '').split(/\r?\n/);
   const lineH = size * (spec.lineSpacing || 1.2);
   const tracking = +spec.letterSpacing || 0;
@@ -113,7 +128,11 @@ export async function buildTextPath(spec, at) {
   cp.fillRule = 'nonzero';
   // Glyph outlines from opentype use nonzero winding; normalise to even-odd friendly orientation.
   cp.reorient(true, true);
+  return finishTextPath(cp, spec, size, at);
+}
 
+// Placement, arc and envelope, shared by outline and single-line text.
+function finishTextPath(cp, spec, size, at) {
   // Arc first: it bends the strip onto a circle, and an envelope afterwards
   // distorts whatever shape that produced.
   if (spec.arc && Math.abs(+spec.arc.angle || 0) >= 0.01) {

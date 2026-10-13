@@ -57,10 +57,15 @@ export const TOPICS = [
 <tr><td>Line</td><td><kbd>L</kbd></td><td>Shift constrains to 45°.</td></tr>
 <tr><td>Pen (Bézier)</td><td><kbd>B</kbd></td><td>Click for corners, drag for curves. Click the first node to close, Enter or double-click to finish, Backspace removes the last node.</td></tr>
 <tr><td>Freehand</td><td><kbd>F</kbd></td><td>Smoothing option. End near the start point to close the shape.</td></tr>
-<tr><td>Text</td><td><kbd>T</kbd></td><td>Any installed font, converted to outlines. Click existing text to edit it.</td></tr>
+<tr><td>Text</td><td><kbd>T</kbd></td><td>Any installed font, converted to outlines, plus eight single-line engraving fonts. Click existing text to edit it.</td></tr>
 <tr><td>Envelope</td><td><kbd>W</kbd></td><td>Distort a text object by dragging the corners and edge midpoints of its box. See below.</td></tr>
 <tr><td>Pan</td><td>—</td><td>Or hold Space, or use the middle mouse button, with any tool.</td></tr>
 </table>
+<h4>Single-line fonts</h4>
+<p>The font list begins with eight <b>single line</b> faces. These are engraving fonts: each letter is one open stroke down the middle rather than a closed outline, so the laser traces it once instead of drawing a boundary and filling it. The same word is roughly <b>60% less travel</b>, which means noticeably faster engraving and far less burn-in on wood.</p>
+<p>Put them on a <b>Line</b> layer. On a Fill layer there is no enclosed area to fill, so almost nothing comes out.</p>
+<p>They cover printable ASCII only. If a character is missing the text is refused with a message naming the problem, rather than quietly dropping letters. For accents or non-Latin scripts use a normal outline font.</p>
+
 <h4>Curving text on an arc</h4>
 <p>Open the <b>Text</b> dialog and set <b>Arc</b> to an angle. 0° is straight; the angle is how many degrees of a circle the words span, so a bigger number means a tighter curve.</p>
 <ul>

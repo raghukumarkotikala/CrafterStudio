@@ -12,10 +12,11 @@
   "scripts": {
     "start": "electron .",
     "library": "node scripts/build-library.js",
+    "strokefonts": "node --no-warnings scripts/build-strokefonts.mjs",
     "guide": "node --no-warnings scripts/build-guide.mjs",
-    "dist": "npm run library && npm run guide && electron-builder --win --x64",
-    "dist:linux": "npm run library && npm run guide && electron-builder --linux AppImage --x64",
-    "dist:all": "npm run library && npm run guide && electron-builder --win --linux --x64",
+    "dist": "npm run library && npm run strokefonts && npm run guide && electron-builder --win --x64",
+    "dist:linux": "npm run library && npm run strokefonts && npm run guide && electron-builder --linux AppImage --x64",
+    "dist:all": "npm run library && npm run strokefonts && npm run guide && electron-builder --win --linux --x64",
     "dist:dir": "electron-builder --dir"
   },
   "author": "Crafter Studio",
@@ -39,7 +40,8 @@
     "@mdi/svg": "^7.4.47",
     "@tabler/icons": "^3.47.0",
     "electron": "^44.4.4",
-    "electron-builder": "^26.15.3"
+    "electron-builder": "^26.15.3",
+    "hersheytext": "^2.0.0"
   },
   "build": {
     "appId": "in.crafterstudio.app",

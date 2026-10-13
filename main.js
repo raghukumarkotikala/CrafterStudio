@@ -357,7 +357,7 @@ ipcMain.handle('fonts:read', async (e, p) => {
 });
 
 // ---------- Asset library ----------
-const BUNDLES = new Set(['tabler-outline', 'tabler-filled', 'mdi']);
+const BUNDLES = new Set(['tabler-outline', 'tabler-filled', 'mdi', 'strokefonts']);
 ipcMain.handle('lib:bundle', async (e, name) => {
   if (!BUNDLES.has(name)) throw new Error('Unknown bundle');
   return fs.promises.readFile(path.join(__dirname, 'src', 'library', name + '.json'), 'utf8');
