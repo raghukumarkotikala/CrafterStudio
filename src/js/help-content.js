@@ -61,6 +61,15 @@ export const TOPICS = [
 <tr><td>Envelope</td><td><kbd>W</kbd></td><td>Distort a text object by dragging the corners and edge midpoints of its box. See below.</td></tr>
 <tr><td>Pan</td><td>—</td><td>Or hold Space, or use the middle mouse button, with any tool.</td></tr>
 </table>
+<h4>Curving text on an arc</h4>
+<p>Open the <b>Text</b> dialog and set <b>Arc</b> to an angle. 0° is straight; the angle is how many degrees of a circle the words span, so a bigger number means a tighter curve.</p>
+<ul>
+<li><b>Positive</b> bends the text over the top of a circle.</li>
+<li><b>Negative</b> bends it under the bottom. Either way it still reads left to right with the letters upright, which is what you want for a badge: the name arched over the top, the year curved under the bottom.</li>
+<li><b>Read along the inside</b> puts the lettering on the inner face of the circle instead.</li>
+</ul>
+<p>Letter spacing along the baseline is preserved as it bends, so words do not crowd or stretch as you change the angle. An arc and an envelope can be combined — the arc is applied first.</p>
+
 <h4>Enveloping text</h4>
 <p>Pick the <b>Envelope</b> tool (<kbd>W</kbd>) with a text object selected, or <i>Object → Envelope Text</i>. Eight handles appear around the text:</p>
 <ul>

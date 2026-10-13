@@ -184,3 +184,69 @@ export function warpItem(item, env, { detail = 0.5 } = {}) {
   }
   return item;
 }
+
+// ---------------------------------------------------------------- arc
+
+/**
+ * Bend geometry around a circular arc.
+ *
+ * The text's own box is treated as a strip that gets rolled onto a circle:
+ * horizontal position becomes angle, vertical position becomes radius. Arc
+ * length along the centre line is preserved, so letters keep their spacing and
+ * the word does not stretch or crowd as the bend tightens.
+ *
+ * angle   total degrees the text spans; sign chooses which way it curves
+ * flip    true reads along the inside of the circle (text upside down at the top)
+ */
+export function arcItem(item, { angle = 120, flip = false, detail = 0.4 } = {}) {
+  if (!item) return item;
+  let deg = Math.max(-355, Math.min(355, +angle || 0));
+  if (Math.abs(deg) < 0.01) return item;
+
+  const rect = item.bounds;
+  if (!rect || rect.width < 1e-9 || rect.height < 1e-9) return item;
+
+  // Reading inside the circle is the same bend the other way round.
+  let up = deg > 0;
+  if (flip) up = !up;
+
+  // The sweep always runs left-to-right. Using the signed angle here would
+  // mirror the text when bending downwards.
+  const sweep = Math.abs(deg) * Math.PI / 180;
+  const R = rect.width / sweep;          // radius that preserves the baseline length
+  const cx = rect.center.x;
+  // Circle centre sits one radius from the baseline, on the side being bent toward.
+  const cy = up ? rect.bottom + R : rect.bottom - R;
+
+  const paths = item.className === 'Path' ? [item]
+    : item.getItems({ match: i => i.className === 'Path' });
+
+  // In both directions the baseline keeps its length and the glyphs' up
+  // direction points away from the centre, so letters stay upright.
+  const map = (x, y) => {
+    const a = ((x - rect.x) / rect.width - 0.5) * sweep;
+    const r = up ? (cy - y) : (y - cy);
+    const sa = Math.sin(a), ca = Math.cos(a);
+    return up ? [cx + r * sa, cy - r * ca]
+              : [cx + r * sa, cy + r * ca];
+  };
+
+  const maxLen = Math.max(0.05, detail);
+  for (const p of paths) {
+    subdivide(p, maxLen);
+    for (const seg of p.segments) {
+      const absIn = seg.point.add(seg.handleIn);
+      const absOut = seg.point.add(seg.handleOut);
+      const [px, py] = map(seg.point.x, seg.point.y);
+      const [ix, iy] = map(absIn.x, absIn.y);
+      const [ox, oy] = map(absOut.x, absOut.y);
+      if (!isFinite(px) || !isFinite(py)) continue;
+      seg.point = new paper.Point(px, py);
+      if (isFinite(ix) && isFinite(iy)) seg.handleIn = new paper.Point(ix - px, iy - py);
+      if (isFinite(ox) && isFinite(oy)) seg.handleOut = new paper.Point(ox - px, oy - py);
+    }
+  }
+  // Reading inside means the letters face the circle's centre.
+  if (flip) item.rotate(180, rect.center);
+  return item;
+}

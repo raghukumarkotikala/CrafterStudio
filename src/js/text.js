@@ -1,6 +1,6 @@
 // Text → vector outlines using opentype.js and installed system fonts.
 /* global opentype, paper */
-import { warpItem, isIdentityQuad } from './warp.js';
+import { warpItem, isIdentityQuad, arcItem } from './warp.js';
 
 const cache = new Map();
 let fontList = null;
@@ -46,6 +46,7 @@ export async function defaultFontPath() {
 /**
  * Build a CompoundPath for the given text spec.
  * spec: { content, font (path), size (mm), letterSpacing (mm), lineSpacing (×), align,
+ *         arc?: { angle (deg, sign picks the bend direction), flip (read inside) },
  *         envelope?: [[u,v] ×4] corner quad in units of the text's natural box,
  *         envRect?: [x, y, w, h] where that natural box sits, so the warp is
  *                   reproduced in the same place when the words change }
@@ -112,6 +113,13 @@ export async function buildTextPath(spec, at) {
   cp.fillRule = 'nonzero';
   // Glyph outlines from opentype use nonzero winding; normalise to even-odd friendly orientation.
   cp.reorient(true, true);
+
+  // Arc first: it bends the strip onto a circle, and an envelope afterwards
+  // distorts whatever shape that produced.
+  if (spec.arc && Math.abs(+spec.arc.angle || 0) >= 0.01) {
+    if (at) cp.bounds.topLeft = at;
+    arcItem(cp, { angle: +spec.arc.angle, flip: !!spec.arc.flip, detail: Math.max(0.1, size / 50) });
+  }
 
   const quad = spec.envelope;
   if (quad && !isIdentityQuad(quad)) {

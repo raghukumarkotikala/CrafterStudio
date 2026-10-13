@@ -174,6 +174,7 @@ export async function openTextDialog(item, at) {
   const spec = item && item.data.text ? { ...item.data.text } : {
     content: 'Crafter Studio', font: await defaultFontPath(), size: 12, letterSpacing: 0, lineSpacing: 1.2, align: 'left'
   };
+  spec.arc = { angle: 0, flip: false, ...(spec.arc || {}) };
   if (!fonts.length && !spec.font) {
     const note = h('div', {}, h('div', { class: 'note warn' }, 'No system fonts were found. Load a .ttf or .otf file to continue.'));
     const inp = h('input', { type: 'file', accept: '.ttf,.otf', onChange: async () => {
@@ -219,7 +220,11 @@ export async function openTextDialog(item, at) {
     row('Size', num(spec.size, v => { spec.size = v; }, { min: 0.5, unit: 'mm' })),
     row('Letter spacing', num(spec.letterSpacing, v => { spec.letterSpacing = v; }, { unit: 'mm' })),
     row('Line spacing', num(spec.lineSpacing, v => { spec.lineSpacing = v; }, { min: 0.5, step: 0.1, unit: '×' })),
-    row('Align', alignSeg));
+    row('Align', alignSeg),
+    h('div', { class: 'sec-h' }, 'Curve'),
+    row('Arc', num(spec.arc.angle, v => { spec.arc.angle = v; }, { min: -355, max: 355, step: 5, unit: '°' })),
+    row('', check(spec.arc.flip, v => { spec.arc.flip = v; }, 'Read along the inside')),
+    h('div', { class: 'small muted' }, '0° is straight. Positive bends the text over a circle, negative bends it under. The wider the angle, the tighter the curve.'));
   openModal({
     title: item ? 'Edit text' : 'Add text',
     body,
