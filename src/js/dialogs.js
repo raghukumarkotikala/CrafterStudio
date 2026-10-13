@@ -459,7 +459,7 @@ async function createMaterialTest(v) {
 export function openShortcuts() {
   const rows = [
     ['V', 'Select / transform'], ['N', 'Edit nodes'], ['R', 'Rectangle'], ['E', 'Ellipse'], ['P', 'Polygon'], ['S', 'Star'],
-    ['L', 'Line'], ['B', 'Pen (Bézier)'], ['F', 'Freehand pencil'], ['T', 'Text'], ['Space + drag / middle mouse', 'Pan'],
+    ['L', 'Line'], ['B', 'Pen (Bézier)'], ['F', 'Freehand pencil'], ['T', 'Text'], ['W', 'Envelope — distort text by its corners'], ['Space + drag / middle mouse', 'Pan'],
     ['Mouse wheel', 'Zoom'], ['Shift + wheel', 'Scroll horizontally'], ['5 / 3', 'Zoom to work area / selection'],
     ['Ctrl+Z / Ctrl+Y', 'Undo / redo'], ['Ctrl+C / X / V / D', 'Copy / cut / paste / duplicate'], ['Delete', 'Delete'],
     ['Ctrl+G / Ctrl+Shift+G', 'Group / ungroup'], ['Ctrl+K / Ctrl+Shift+K', 'Combine / break apart'],

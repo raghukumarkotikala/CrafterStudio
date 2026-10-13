@@ -6,6 +6,9 @@ import {
   pushHistory, addItem, snap, panBy, zoomAt, drawRulers, styleItem
 } from './editor.js';
 
+import { warpItem, isValidQuad, IDENTITY_QUAD } from './warp.js';
+import { buildTextPath } from './text.js';
+
 export const hooks = { editText: null };
 
 const px = n => n / paper.view.zoom;
@@ -486,11 +489,170 @@ const textTool = {
   }
 };
 
+// ------------------------------------------------------------------ envelope
+// Drag the four corners of a text object to distort it. The quad is kept in the
+// text spec in units of the text's own box, so changing the words later re-warps
+// instead of losing the shape.
+const envelopeTool = {
+  cursor: 'default',
+  target: null,
+  base: null,      // undistorted outline, anchored where the envelope is drawn
+  rect: null,      // that outline's bounds — the quad is relative to this
+  quad: null,
+  marks: null,
+  dragIdx: -1,
+  changed: false,
+
+  enter() {
+    const t = state.selection.find(i => i.data && i.data.text);
+    this.setTarget(t || null);
+  },
+
+  exit() {
+    this.clearMarks();
+    this.target = this.base = this.rect = this.quad = null;
+    this.dragIdx = -1;
+  },
+
+  clearMarks() {
+    if (this.marks) { this.marks.remove(); this.marks = null; }
+  },
+
+  async setTarget(item) {
+    this.clearMarks();
+    this.target = null;
+    this.base = this.rect = this.quad = null;
+    if (!item || !item.data || !item.data.text) { paper.view.requestUpdate(); return; }
+
+    const spec = item.data.text;
+    let base;
+    try {
+      base = await buildTextPath({ ...spec, envelope: null, envRect: null });
+    } catch {
+      bus.emit('toast', 'Could not read this text for enveloping.', 'err');
+      return;
+    }
+    // Anchor the undistorted outline over the object as it sits now.
+    const r = spec.envRect;
+    if (r && r[2] > 0 && r[3] > 0) {
+      base.scale(r[2] / base.bounds.width, r[3] / base.bounds.height, base.bounds.topLeft);
+      base.bounds.topLeft = new paper.Point(r[0], r[1]);
+    } else {
+      base.bounds.topLeft = item.bounds.topLeft;
+    }
+    this.target = item;
+    this.base = base;
+    this.rect = base.bounds.clone();
+    this.quad = (spec.envelope || IDENTITY_QUAD).map(p => [p[0], p[1]]);
+    state.selection = [item];
+    bus.emit('selection');
+    this.drawMarks();
+  },
+
+  cornerPoint(i) {
+    const [u, v] = this.quad[i];
+    return new paper.Point(this.rect.x + u * this.rect.width, this.rect.y + v * this.rect.height);
+  },
+
+  drawMarks() {
+    this.clearMarks();
+    if (!this.target) { paper.view.requestUpdate(); return; }
+    ed.overlay.activate();
+    const g = new paper.Group();
+    const pts = [0, 1, 2, 3].map(i => this.cornerPoint(i));
+    g.addChild(new paper.Path({ segments: pts, closed: true, strokeColor: '#f0a52a', strokeWidth: 1, strokeScaling: false, dashArray: [4, 3] }));
+    const hs = px(9);
+    pts.forEach((p, i) => {
+      const h = new paper.Path.Circle({ center: p, radius: hs / 2, fillColor: '#ffffff', strokeColor: '#f0a52a', strokeWidth: 1.4, strokeScaling: false });
+      h.data.env = i;
+      g.addChild(h);
+    });
+    this.marks = g;
+    ed.design.activate();
+    paper.view.requestUpdate();
+  },
+
+  hitCorner(point) {
+    if (!this.marks) return -1;
+    const hit = this.marks.hitTest(point, { fill: true, stroke: true, tolerance: px(6), match: h => h.item.data && h.item.data.env != null });
+    return hit ? hit.item.data.env : -1;
+  },
+
+  // Rebuild the object's geometry from the pristine outline, so repeated drags
+  // never compound rounding from an already-warped shape.
+  rebuild() {
+    if (!this.target || !this.base) return;
+    const warped = this.base.clone({ insert: false });
+    warpItem(warped, this.quad, { detail: Math.max(0.12, this.rect.height / 40) });
+    this.target.removeChildren();
+    this.target.addChildren(warped.removeChildren());
+    paper.view.requestUpdate();
+  },
+
+  down(e) {
+    this.changed = false;
+    this.dragIdx = this.hitCorner(e.point);
+    if (this.dragIdx >= 0) return;
+    const h = hitDesign(e.point);
+    const top = h && h.top;
+    if (top && top.data && top.data.text) { this.setTarget(top); return; }
+    this.setTarget(null);
+  },
+
+  drag(e) {
+    if (this.dragIdx < 0 || !this.rect) return;
+    const u = (e.point.x - this.rect.x) / this.rect.width;
+    const v = (e.point.y - this.rect.y) / this.rect.height;
+    const next = this.quad.map(p => [p[0], p[1]]);
+    next[this.dragIdx] = [u, v];
+    // Refuse drags that fold the envelope; the shape simply stops following.
+    if (!isValidQuad(next)) return;
+    this.quad = next;
+    this.changed = true;
+    this.rebuild();
+    this.drawMarks();
+  },
+
+  up() {
+    this.dragIdx = -1;
+    if (!this.changed || !this.target) return;
+    this.target.data.text = {
+      ...this.target.data.text,
+      envelope: this.quad.map(p => [p[0], p[1]]),
+      envRect: [this.rect.x, this.rect.y, this.rect.width, this.rect.height]
+    };
+    this.changed = false;
+    pushHistory();
+    bus.emit('selection');
+  },
+
+  move(e) {
+    ed.canvas.style.cursor = this.hitCorner(e.point) >= 0 ? 'pointer' : 'default';
+  },
+
+  key(e) {
+    if (e.key === 'Escape' && this.target) { setTool('select'); return true; }
+    return false;
+  },
+
+  reset() {
+    if (!this.target) return;
+    this.quad = IDENTITY_QUAD.map(p => [p[0], p[1]]);
+    this.changed = true;
+    this.rebuild();
+    this.drawMarks();
+    this.up();
+  }
+};
+
 const panTool = { cursor: 'grab' };
+
+export { envelopeTool };
 
 export const TOOLS = {
   select: selectTool, node: nodeTool, rect: rectTool, ellipse: ellipseTool, polygon: polygonTool,
-  star: starTool, line: lineTool, pen: penTool, pencil: pencilTool, text: textTool, pan: panTool
+  star: starTool, line: lineTool, pen: penTool, pencil: pencilTool, text: textTool,
+  envelope: envelopeTool, pan: panTool
 };
 
 export function currentTool() { return TOOLS[state.tool] || selectTool; }

@@ -123,6 +123,7 @@ const TOOL_META = [
   ['pen', 'pen', 'Pen — Bézier curves (B)'],
   ['pencil', 'pencil', 'Freehand (F)'],
   ['text', 'text', 'Text (T)'],
+  ['envelope', 'envelope', 'Envelope — drag the corners of a text object (W)'],
   null,
   ['pan', 'pan', 'Pan (Space)']
 ];

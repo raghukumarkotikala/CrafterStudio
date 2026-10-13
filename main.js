@@ -110,6 +110,9 @@ function buildMenu() {
         item('Circular Array…', 'obj.circArray'),
         item('Center in Work Area', 'obj.centerWork'),
         { type: 'separator' },
+        item('Envelope Text', 'obj.envelope', 'W', true),
+        item('Reset Envelope', 'obj.envelopeReset'),
+        { type: 'separator' },
         item('Trace Image…', 'obj.trace'),
         item('Convert Text to Path', 'obj.toPath')
       ]

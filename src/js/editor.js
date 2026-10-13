@@ -288,7 +288,7 @@ export function updateSelectionBox() {
   if (ed.selBox) { ed.selBox.remove(); ed.selBox = null; }
   state.selection = state.selection.filter(i => i.parent);
   const b = selectionBounds();
-  if (!b || state.tool === 'node') { paper.view.requestUpdate(); return; }
+  if (!b || state.tool === 'node' || state.tool === 'envelope') { paper.view.requestUpdate(); return; }
   ed.overlay.activate();
   const z = paper.view.zoom;
   const hs = HANDLE_PX / z;

@@ -1,5 +1,6 @@
 // Text → vector outlines using opentype.js and installed system fonts.
 /* global opentype, paper */
+import { warpItem, isIdentityQuad } from './warp.js';
 
 const cache = new Map();
 let fontList = null;
@@ -44,7 +45,10 @@ export async function defaultFontPath() {
 
 /**
  * Build a CompoundPath for the given text spec.
- * spec: { content, font (path), size (mm, cap-ish height = font size), letterSpacing (mm), lineSpacing (×), align }
+ * spec: { content, font (path), size (mm), letterSpacing (mm), lineSpacing (×), align,
+ *         envelope?: [[u,v] ×4] corner quad in units of the text's natural box,
+ *         envRect?: [x, y, w, h] where that natural box sits, so the warp is
+ *                   reproduced in the same place when the words change }
  */
 export async function buildTextPath(spec, at) {
   const font = await loadFont(spec.font);
@@ -98,7 +102,23 @@ export async function buildTextPath(spec, at) {
   cp.fillRule = 'nonzero';
   // Glyph outlines from opentype use nonzero winding; normalise to even-odd friendly orientation.
   cp.reorient(true, true);
-  if (at) cp.bounds.topLeft = at;
+
+  const quad = spec.envelope;
+  if (quad && !isIdentityQuad(quad)) {
+    // Anchor the undistorted text where the envelope was drawn, so editing the
+    // words re-warps in place instead of jumping.
+    if (spec.envRect) {
+      const [ex, ey, ew, eh] = spec.envRect;
+      if (ew > 0 && eh > 0) cp.scale(ew / cp.bounds.width, eh / cp.bounds.height, cp.bounds.topLeft);
+      cp.bounds.topLeft = new paper.Point(ex, ey);
+    } else if (at) {
+      cp.bounds.topLeft = at;
+    }
+    warpItem(cp, quad, { detail: Math.max(0.12, size / 40) });
+  } else if (at) {
+    cp.bounds.topLeft = at;
+  }
+
   cp.data.text = { ...spec };
   return cp;
 }

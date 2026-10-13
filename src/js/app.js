@@ -37,7 +37,7 @@ function boot() {
 // Keys that the Electron menu registers itself; in a plain browser we handle them here.
 const MENU_OWNED = new Set(['ctrl+n', 'ctrl+o', 'ctrl+s', 'ctrl+shift+s', 'ctrl+i', 'ctrl+e', 'f5', 'alt+p', 'ctrl+shift+m', 'f1']);
 
-const TOOL_KEYS = { v: 'select', n: 'node', r: 'rect', e: 'ellipse', p: 'polygon', s: 'star', l: 'line', b: 'pen', f: 'pencil', t: 'text' };
+const TOOL_KEYS = { v: 'select', n: 'node', r: 'rect', e: 'ellipse', p: 'polygon', s: 'star', l: 'line', b: 'pen', f: 'pencil', t: 'text', w: 'envelope' };
 
 function onKey(e) {
   if (modalOpen() || isTyping(e)) return;

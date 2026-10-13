@@ -5,7 +5,7 @@ import * as ops from './ops.js';
 import * as io from './io.js';
 import * as dlg from './dialogs.js';
 import * as jobs from './jobs.js';
-import { setTool, TOOLS } from './tools.js';
+import { setTool, TOOLS, envelopeTool } from './tools.js';
 import * as aiui from './aiui.js';
 import { openHelp } from './help.js';
 import { showTab } from './ui.js';
@@ -76,6 +76,9 @@ export const cmds = {
   'job.stop': jobs.stopJob,
   'tools.materials': dlg.openMaterialsDialog,
   'tools.materialTest': dlg.openMaterialTestDialog,
+
+  'obj.envelope': () => setTool('envelope'),
+  'obj.envelopeReset': () => envelopeTool.reset(),
 
   'ai.panel': () => showTab('ai'),
   'ai.assist': aiui.openAssistDialog,
