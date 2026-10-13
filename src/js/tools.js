@@ -6,7 +6,7 @@ import {
   pushHistory, addItem, snap, panBy, zoomAt, drawRulers, styleItem
 } from './editor.js';
 
-import { warpItem, isValidQuad, IDENTITY_QUAD } from './warp.js';
+import { warpItem, isValidQuad, IDENTITY_ENVELOPE, normalizeEnvelope, unitQuadTransform, mapUnit, MID_PARAM } from './warp.js';
 import { buildTextPath } from './text.js';
 
 export const hooks = { editText: null };
@@ -543,7 +543,7 @@ const envelopeTool = {
     this.target = item;
     this.base = base;
     this.rect = base.bounds.clone();
-    this.quad = (spec.envelope || IDENTITY_QUAD).map(p => [p[0], p[1]]);
+    this.quad = normalizeEnvelope(spec.envelope);
     state.selection = [item];
     bus.emit('selection');
     this.drawMarks();
@@ -554,16 +554,46 @@ const envelopeTool = {
     return new paper.Point(this.rect.x + u * this.rect.width, this.rect.y + v * this.rect.height);
   },
 
+  // Midpoints are stored as absolute positions, so moving a corner would drag
+  // its edges into an unintended bow. Measure each bow before the move and
+  // re-apply it after, which leaves untouched edges straight.
+  moveCorner(idx, u, v) {
+    const next = this.quad.map(p => [p[0], p[1]]);
+    const before = unitQuadTransform(this.quad.slice(0, 4));
+    const bows = before
+      ? MID_PARAM.map((mp, i) => {
+        const st = mapUnit(before, mp[0], mp[1]);
+        return [this.quad[4 + i][0] - st[0], this.quad[4 + i][1] - st[1]];
+      })
+      : MID_PARAM.map(() => [0, 0]);
+
+    next[idx] = [u, v];
+    if (!isValidQuad(next.slice(0, 4))) return null;
+
+    const after = unitQuadTransform(next.slice(0, 4));
+    if (!after) return null;
+    MID_PARAM.forEach((mp, i) => {
+      const st = mapUnit(after, mp[0], mp[1]);
+      next[4 + i] = [st[0] + bows[i][0], st[1] + bows[i][1]];
+    });
+    return next;
+  },
+
   drawMarks() {
     this.clearMarks();
     if (!this.target) { paper.view.requestUpdate(); return; }
     ed.overlay.activate();
     const g = new paper.Group();
-    const pts = [0, 1, 2, 3].map(i => this.cornerPoint(i));
-    g.addChild(new paper.Path({ segments: pts, closed: true, strokeColor: '#f0a52a', strokeWidth: 1, strokeScaling: false, dashArray: [4, 3] }));
+    const pts = this.quad.map((_, i) => this.cornerPoint(i));
+    // Outline runs corner, midpoint, corner… so a bowed edge is visible as the
+    // boundary actually bending, not just a handle floating off the line.
+    const ring = [pts[0], pts[4], pts[1], pts[5], pts[2], pts[6], pts[3], pts[7]];
+    g.addChild(new paper.Path({ segments: ring, closed: true, strokeColor: '#f0a52a', strokeWidth: 1, strokeScaling: false, dashArray: [4, 3] }));
     const hs = px(9);
     pts.forEach((p, i) => {
-      const h = new paper.Path.Circle({ center: p, radius: hs / 2, fillColor: '#ffffff', strokeColor: '#f0a52a', strokeWidth: 1.4, strokeScaling: false });
+      const h = i < 4
+        ? new paper.Path.Circle({ center: p, radius: hs / 2, fillColor: '#ffffff', strokeColor: '#f0a52a', strokeWidth: 1.4, strokeScaling: false })
+        : new paper.Path.Rectangle({ point: p.subtract(hs * 0.36), size: [hs * 0.72, hs * 0.72], fillColor: '#f0a52a', strokeColor: '#ffffff', strokeWidth: 1.2, strokeScaling: false });
       h.data.env = i;
       g.addChild(h);
     });
@@ -603,10 +633,18 @@ const envelopeTool = {
     if (this.dragIdx < 0 || !this.rect) return;
     const u = (e.point.x - this.rect.x) / this.rect.width;
     const v = (e.point.y - this.rect.y) / this.rect.height;
-    const next = this.quad.map(p => [p[0], p[1]]);
-    next[this.dragIdx] = [u, v];
-    // Refuse drags that fold the envelope; the shape simply stops following.
-    if (!isValidQuad(next)) return;
+    let next;
+    if (this.dragIdx < 4) {
+      // Refuse drags that fold the envelope; the shape simply stops following.
+      next = this.moveCorner(this.dragIdx, u, v);
+      if (!next) return;
+    } else {
+      // Edge midpoints bow their edge. Bound them so a stray drag cannot throw
+      // the geometry a screen away.
+      if (Math.abs(u) > 3 || Math.abs(v) > 3) return;
+      next = this.quad.map(p => [p[0], p[1]]);
+      next[this.dragIdx] = [u, v];
+    }
     this.quad = next;
     this.changed = true;
     this.rebuild();
@@ -637,7 +675,7 @@ const envelopeTool = {
 
   reset() {
     if (!this.target) return;
-    this.quad = IDENTITY_QUAD.map(p => [p[0], p[1]]);
+    this.quad = IDENTITY_ENVELOPE.map(p => [p[0], p[1]]);
     this.changed = true;
     this.rebuild();
     this.drawMarks();

@@ -9,6 +9,41 @@
 // (0,0) (1,0) (1,1) (0,1).
 export const IDENTITY_QUAD = [[0, 0], [1, 0], [1, 1], [0, 1]];
 
+// Full envelope: the four corners above, then the four edge midpoints in the
+// order top, right, bottom, left. Moving a midpoint bows that edge; leaving it
+// where it starts gives exactly the plain four-corner behaviour.
+export const IDENTITY_ENVELOPE = [
+  [0, 0], [1, 0], [1, 1], [0, 1],
+  [0.5, 0], [1, 0.5], [0.5, 1], [0, 0.5]
+];
+
+// Source-space position each midpoint handle corresponds to.
+export const MID_PARAM = [[0.5, 0], [1, 0.5], [0.5, 1], [0, 0.5]];
+
+/** Accepts a legacy 4-corner envelope and returns the 8-point form. */
+export function normalizeEnvelope(env) {
+  if (!Array.isArray(env) || env.length < 4) return IDENTITY_ENVELOPE.map(p => p.slice());
+  const out = env.slice(0, 4).map(p => [p[0], p[1]]);
+  if (env.length >= 8) {
+    for (let i = 4; i < 8; i++) out.push([env[i][0], env[i][1]]);
+    return out;
+  }
+  // No midpoints stored: place each one where the straight edge map puts it,
+  // which leaves the shape identical to the four-corner version.
+  const t = unitQuadTransform(out);
+  for (let i = 0; i < 4; i++) {
+    out.push(t ? mapUnit(t, MID_PARAM[i][0], MID_PARAM[i][1])
+               : IDENTITY_ENVELOPE[4 + i].slice());
+  }
+  return out;
+}
+
+export function isIdentityEnvelope(env) {
+  const e = normalizeEnvelope(env);
+  return e.every((p, i) => Math.abs(p[0] - IDENTITY_ENVELOPE[i][0]) < 1e-9 &&
+                           Math.abs(p[1] - IDENTITY_ENVELOPE[i][1]) < 1e-9);
+}
+
 export function isIdentityQuad(q) {
   if (!Array.isArray(q) || q.length !== 4) return true;
   return q.every((p, i) => Math.abs(p[0] - IDENTITY_QUAD[i][0]) < 1e-9 &&
@@ -82,16 +117,33 @@ function subdivide(path, maxLen) {
   }
 }
 
-function warpSegments(path, rect, t) {
+// Blend the four edge bows into the interior. Each weight peaks at the middle
+// of its own edge and falls to zero at both ends and at the opposite edge, so
+// corners stay exactly where the projective map puts them.
+function addBows(bows, u, v, x, y) {
+  const fu = 4 * u * (1 - u), fv = 4 * v * (1 - v);
+  const w = [fu * (1 - v), fv * u, fu * v, fv * (1 - u)];
+  for (let i = 0; i < 4; i++) {
+    x += bows[i][0] * w[i];
+    y += bows[i][1] * w[i];
+  }
+  return [x, y];
+}
+
+function warpSegments(path, rect, t, bows) {
   const toUV = p => [(p.x - rect.x) / rect.width, (p.y - rect.y) / rect.height];
+  const map = (u, v) => {
+    const [x, y] = mapUnit(t, u, v);
+    return bows ? addBows(bows, u, v, x, y) : [x, y];
+  };
   for (const seg of path.segments) {
     // Handles are relative to their segment point, so lift them to absolute
     // positions, map all three, then put them back as offsets.
     const absIn = seg.point.add(seg.handleIn);
     const absOut = seg.point.add(seg.handleOut);
-    const [px, py] = mapUnit(t, ...toUV(seg.point));
-    const [ix, iy] = mapUnit(t, ...toUV(absIn));
-    const [ox, oy] = mapUnit(t, ...toUV(absOut));
+    const [px, py] = map(...toUV(seg.point));
+    const [ix, iy] = map(...toUV(absIn));
+    const [ox, oy] = map(...toUV(absOut));
     if (!isFinite(px) || !isFinite(py)) continue;
     seg.point = new paper.Point(px, py);
     if (isFinite(ix) && isFinite(iy)) seg.handleIn = new paper.Point(ix - px, iy - py);
@@ -103,22 +155,32 @@ function warpSegments(path, rect, t) {
  * Warp `item` in place so its current bounds map onto `quad`, where quad
  * corners are given in units of the bounding box (0..1, and may go outside it).
  */
-export function warpItem(item, quad, { detail = 0.5 } = {}) {
-  if (!item || isIdentityQuad(quad)) return item;
+export function warpItem(item, env, { detail = 0.5 } = {}) {
+  if (!item || isIdentityEnvelope(env)) return item;
   const rect = item.bounds;
   if (!rect || rect.width < 1e-9 || rect.height < 1e-9) return item;
 
-  // Convert the normalised quad into real coordinates around the item.
-  const abs = quad.map(([u, v]) => [rect.x + u * rect.width, rect.y + v * rect.height]);
-  const t = unitQuadTransform(abs);
+  // Convert the normalised envelope into real coordinates around the item.
+  const e = normalizeEnvelope(env);
+  const abs = e.map(([u, v]) => [rect.x + u * rect.width, rect.y + v * rect.height]);
+  const t = unitQuadTransform(abs.slice(0, 4));
   if (!t) return item;
+
+  // How far each midpoint has been pulled off the straight-edge map. Zero bow
+  // means the four-corner projective result is reproduced exactly.
+  const bows = MID_PARAM.map((mp, i) => {
+    const straight = mapUnit(t, mp[0], mp[1]);
+    return [abs[4 + i][0] - straight[0], abs[4 + i][1] - straight[1]];
+  });
+  const bowed = bows.some(b => Math.abs(b[0]) > 1e-9 || Math.abs(b[1]) > 1e-9);
 
   const paths = item.className === 'Path' ? [item]
     : item.getItems({ match: i => i.className === 'Path' });
   const maxLen = Math.max(0.05, detail);
   for (const p of paths) {
-    subdivide(p, maxLen);
-    warpSegments(p, rect, t);
+    // Bowed edges curve more than a flat projective map, so sample finer.
+    subdivide(p, bowed ? maxLen * 0.5 : maxLen);
+    warpSegments(p, rect, t, bowed ? bows : null);
   }
   return item;
 }

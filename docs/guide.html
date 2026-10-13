@@ -244,11 +244,16 @@
 <tr><td>Pen (Bézier)</td><td><kbd>B</kbd></td><td>Click for corners, drag for curves. Click the first node to close, Enter or double-click to finish, Backspace removes the last node.</td></tr>
 <tr><td>Freehand</td><td><kbd>F</kbd></td><td>Smoothing option. End near the start point to close the shape.</td></tr>
 <tr><td>Text</td><td><kbd>T</kbd></td><td>Any installed font, converted to outlines. Click existing text to edit it.</td></tr>
-<tr><td>Envelope</td><td><kbd>W</kbd></td><td>Distort a text object by dragging the four corners of its box. See below.</td></tr>
+<tr><td>Envelope</td><td><kbd>W</kbd></td><td>Distort a text object by dragging the corners and edge midpoints of its box. See below.</td></tr>
 <tr><td>Pan</td><td>—</td><td>Or hold Space, or use the middle mouse button, with any tool.</td></tr>
 </table>
 <h4>Enveloping text</h4>
-<p>Pick the <b>Envelope</b> tool (<kbd>W</kbd>) with a text object selected, or <i>Object → Envelope Text</i>. Four round handles appear at the corners of the text. Drag them to stretch, skew or throw the text into perspective — making it narrow at one end and wide at the other, for example, so it looks like it recedes.</p>
+<p>Pick the <b>Envelope</b> tool (<kbd>W</kbd>) with a text object selected, or <i>Object → Envelope Text</i>. Eight handles appear around the text:</p>
+<ul>
+<li><b>Round handles at the four corners</b> stretch, skew and throw the text into perspective — pull one end narrower than the other and the lettering recedes.</li>
+<li><b>Square handles at the middle of each edge</b> bow that edge, so you can arch a word over a curve or swell it into a banner shape.</li>
+</ul>
+<p>Moving a corner carries its edge midpoints along, so edges you have not deliberately bowed stay straight.</p>
 <p>The distortion is stored with the text rather than baked into the outlines, so you can reopen the Text dialog afterwards, change the wording or the font, and the same shape is re-applied to the new letters. <i>Object → Reset Envelope</i> puts it back to a plain rectangle.</p>
 <p>Corners cannot be dragged past each other: an envelope that folded over itself would turn the letters inside out, so the shape simply stops following your cursor at that point.</p>
 <p>Rotate by dragging from outside a corner handle; Shift snaps the angle. Arrow keys nudge 1 mm, Shift 10 mm, Alt 0.1 mm. <kbd>%</kbd> toggles snap to grid.</p>
