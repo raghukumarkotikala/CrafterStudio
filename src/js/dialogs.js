@@ -8,6 +8,7 @@ import { ed, drawWorkArea, fitWorkArea, addItem, pushHistory, select as selectIt
 import { buildTextPath, listFonts, defaultFontPath, registerFontBuffer } from './text.js';
 import * as ops from './ops.js';
 import { machine } from './machine.js';
+import { codeTypes, encode, matrixToItem, moduleSize, defaultCodeSize } from './barcode.js';
 
 // ================================================================ machine profile
 export function openProfileDialog({ welcome = false } = {}) {
@@ -325,6 +326,98 @@ export function openTraceDialog() {
   ], async v => {
     await ops.traceImage(r, v);
     if (v.hide) { r.remove(); pushHistory(); }
+  });
+}
+
+// ================================================================ 2D codes
+export async function openCodeDialog() {
+  let types;
+  try {
+    types = await codeTypes();
+  } catch (e) {
+    toast('Codes are unavailable: ' + e.message, 'err');
+    return;
+  }
+  const v = { type: 'qrcode', text: 'https://www.crafterstudio.in', size: defaultCodeSize(), quiet: 2 };
+  let matrix = null;
+
+  const preview = h('div', { class: 'ai-preview', style: { minHeight: '150px' } });
+  const info = h('div', { class: 'small muted', style: { marginTop: '6px' } });
+  const warn = h('div', {});
+
+  const draw = () => {
+    preview.innerHTML = '';
+    warn.innerHTML = '';
+    if (!matrix) { info.textContent = ''; return; }
+    const { w, h: hh, rows } = matrix;
+    // Render the preview with its quiet zone, which is how a scanner sees it.
+    const q = v.quiet;
+    const span = w + 2 * q;
+    let r = '';
+    for (let y = 0; y < hh; y++) {
+      for (let x = 0; x < w; x++) {
+        if (rows[y][x] === '1') r += `<rect x="${x + q}" y="${y + q}" width="1.02" height="1.02"/>`;
+      }
+    }
+    preview.innerHTML = `<svg viewBox="0 0 ${span} ${span}" xmlns="http://www.w3.org/2000/svg">` +
+      `<rect width="${span}" height="${span}" fill="#fff"/><g fill="#000">${r}</g></svg>`;
+
+    const mm = moduleSize(matrix, v.size);
+    info.textContent = `${matrix.type} · ${w}×${hh} modules · ${mm.toFixed(2)} mm per module · ${(v.size + 2 * q * mm).toFixed(1)} mm including the quiet zone`;
+    // Below roughly a third of a millimetre, a diode spot bridges adjacent
+    // modules and the code stops scanning.
+    if (mm < 0.35) {
+      warn.appendChild(h('div', { class: 'note warn' },
+        `At ${mm.toFixed(2)} mm per module this is finer than most lasers can resolve — the modules will bleed together and it is unlikely to scan. Increase the size or shorten the text.`));
+    }
+  };
+
+  const refresh = async () => {
+    try {
+      matrix = await encode(v.type, v.text);
+      draw();
+    } catch (e) {
+      matrix = null;
+      preview.innerHTML = '';
+      info.textContent = '';
+      warn.innerHTML = '';
+      warn.appendChild(h('div', { class: 'note warn' }, e.message));
+    }
+  };
+
+  const ta = h('textarea', { class: 'inp', rows: 3 }, v.text);
+  ta.addEventListener('keydown', e => e.stopPropagation());
+  ta.addEventListener('input', () => { v.text = ta.value; refresh(); });
+
+  const body = h('div', { style: { width: '460px' } },
+    row('Type', select(types, v.type, x => { v.type = x; refresh(); })),
+    row('Content', ta),
+    row('Size', num(v.size, x => { v.size = x; draw(); }, { min: 5, max: 400, unit: 'mm' })),
+    row('Quiet zone', num(v.quiet, x => { v.quiet = Math.round(x); draw(); }, { min: 0, max: 8, step: 1, unit: 'mod' })),
+    preview, info, warn,
+    h('div', { class: 'note', html: 'Put codes on a <b>Fill</b> layer so the dark modules are engraved solid. Always scan a test piece before committing to a batch: contrast and module size both decide whether it reads.' }));
+
+  await refresh();
+
+  openModal({
+    title: 'Insert a 2D code',
+    body,
+    width: '520px',
+    buttons: [
+      { label: 'Cancel' },
+      { label: 'Insert', primary: true, onClick: () => {
+        if (!matrix) { toast('Nothing encoded yet.', 'err'); return false; }
+        try {
+          const item = matrixToItem(matrix, { size: v.size, quiet: v.quiet });
+          item.bounds.topLeft = new paper.Point(10, 10);
+          addItem(item);
+          toast(`${matrix.w}×${matrix.h} ${v.type} inserted. Engrave it on a Fill layer.`);
+        } catch (e) {
+          toast('Could not build the code: ' + e.message, 'err');
+          return false;
+        }
+      } }
+    ]
   });
 }
 

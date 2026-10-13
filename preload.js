@@ -7,6 +7,8 @@ contextBridge.exposeInMainWorld('api', {
   readFont: p => ipcRenderer.invoke('fonts:read', p),
   confirm: opts => ipcRenderer.invoke('app:confirm', opts),
   appVersion: () => ipcRenderer.invoke('app:version'),
+  codeTypes: () => ipcRenderer.invoke('code:types'),
+  codeEncode: req => ipcRenderer.invoke('code:encode', req),
   openExternal: url => ipcRenderer.invoke('app:openExternal', url),
   libBundle: name => ipcRenderer.invoke('lib:bundle', name),
   libList: () => ipcRenderer.invoke('lib:list'),

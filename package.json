@@ -30,6 +30,7 @@
   },
   "license": "ISC",
   "dependencies": {
+    "bwip-js": "^4.11.4",
     "dxf-parser": "^1.1.2",
     "imagetracerjs": "^1.2.6",
     "opentype.js": "^2.0.0",

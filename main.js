@@ -110,6 +110,7 @@ function buildMenu() {
         item('Circular Array…', 'obj.circArray'),
         item('Center in Work Area', 'obj.centerWork'),
         { type: 'separator' },
+        item('Insert 2D Code…', 'obj.code'),
         item('Envelope Text', 'obj.envelope', 'W', true),
         item('Reset Envelope', 'obj.envelopeReset'),
         { type: 'separator' },
@@ -234,6 +235,47 @@ ipcMain.on('serial:choose', (e, portId) => {
     pendingSerialCallback(portId || '');
     pendingSerialCallback = null;
   }
+});
+
+// ---------- 2D code encoding ----------
+// bwip-js is CommonJS and the renderer runs ES modules under a strict CSP, so
+// encoding happens here and only the module matrix crosses the bridge. Linear
+// symbologies are deliberately absent: bwip-js's raw() cannot produce a matrix
+// for them, and a rasterised barcode is no use to a laser.
+const CODE_TYPES = {
+  qrcode: 'QR Code',
+  datamatrix: 'Data Matrix',
+  gs1datamatrix: 'GS1 Data Matrix',
+  azteccode: 'Aztec',
+  microqrcode: 'Micro QR'
+};
+
+ipcMain.handle('code:types', () => CODE_TYPES);
+
+ipcMain.handle('code:encode', (e, { type, text, options } = {}) => {
+  if (!CODE_TYPES[type]) throw new Error('Unsupported code type');
+  const value = String(text == null ? '' : text);
+  if (!value) throw new Error('Nothing to encode.');
+  let out;
+  try {
+    const bwipjs = require('bwip-js');
+    out = bwipjs.raw({ bcid: type, text: value, ...(options || {}) });
+  } catch (err) {
+    // Encoders reject input they cannot represent — too long, wrong character
+    // set, bad check digit. Pass that through rather than a stack trace.
+    throw new Error(String(err && err.message || err).replace(/^bwipp\.\w+:\s*/, ''));
+  }
+  const sym = Array.isArray(out) ? out[0] : out;
+  if (!sym || !sym.pixs || !sym.pixx || !sym.pixy) throw new Error('Encoder returned no matrix.');
+  if (sym.pixx * sym.pixy !== sym.pixs.length) throw new Error('Encoder returned a malformed matrix.');
+  // Pack the matrix as a compact string of 0/1 per row.
+  const rows = [];
+  for (let y = 0; y < sym.pixy; y++) {
+    let r = '';
+    for (let x = 0; x < sym.pixx; x++) r += sym.pixs[y * sym.pixx + x] ? '1' : '0';
+    rows.push(r);
+  }
+  return { type, text: value, w: sym.pixx, h: sym.pixy, rows };
 });
 
 ipcMain.handle('app:version', () => app.getVersion());
