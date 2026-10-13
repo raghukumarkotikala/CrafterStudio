@@ -628,7 +628,8 @@ export function deviceFromProfile(p) {
     framePower: 0,
     frameSpeed: 3000,
     startGcode: '',
-    endGcode: ''
+    endGcode: '',
+    rotary: { enabled: false, axis: 'Y', objectDiameter: 60, mmPerRotation: 360 }
   };
 }
 

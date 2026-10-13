@@ -172,6 +172,26 @@ export const TOPICS = [
 <p>Crafter Studio cuts inner shapes before outer ones and orders paths to shorten travel, but it cannot know which parts hold your work together.</p>` },
 
   {
+    id: 'rotary', title: 'Rotary axis', body: `
+<p>A rotary attachment turns the workpiece instead of moving the bed, so a design wraps around a cylinder — a tumbler, a pen, a ring. Set it up under <b>Machine → Rotary</b>.</p>
+<div class="note warn"><b>Not verified against hardware.</b> This output has been checked mathematically but never run on a real rotary. Before cutting anything, frame the job with the laser off and confirm the object turns as far as you expect.</div>
+<h4>What the numbers mean</h4>
+<p>Height in your design becomes distance <i>around</i> the object. A design <b>188.5 mm</b> tall wraps exactly once around a 60 mm diameter object, because that is its circumference (π × 60). Make the design taller than the circumference and it will wrap over itself.</p>
+<table class="tbl">
+<tr><th>Setting</th><th>What it is</th></tr>
+<tr><td>Object ⌀</td><td>Diameter of the item being engraved, at the point the laser hits it. This is what converts design height into rotation, so measure it rather than guessing.</td></tr>
+<tr><td>Output on</td><td><b>Y axis</b> if the rotary is plugged into the Y motor and your controller still thinks in millimetres. <b>A axis</b> if your firmware has a real fourth axis taking degrees — 3-axis GRBL builds ignore A moves entirely.</td></tr>
+<tr><td>Per full turn</td><td>Y-axis mode only: how much Y travel produces one complete revolution. Measure it once by jogging, or work it out from the axis steps per mm and steps per revolution.</td></tr>
+</table>
+<h4>While rotary is on</h4>
+<ul>
+<li>Homing only seeks X. Homing a rotary axis would drive it into nothing.</li>
+<li>Return-to-origin only returns X, for the same reason.</li>
+<li>The generated file carries a header recording the diameter, the circumference and the exact conversion used, so you can check what was assumed.</li>
+</ul>
+<p>The toolpath preview still draws the job flat. It shows what will be engraved, not how it wraps.</p>` },
+
+  {
     id: 'running', title: 'Running a job over USB', body: `
 <p>The <b>Machine</b> tab drives the machine directly for ${direct}.</p>
 <ol>

@@ -435,6 +435,41 @@ const cmdHistory = [];
 function renderMachineTab(body) {
   const dev = state.device;
   const ctl = CONTROLLERS[dev.controller] || CONTROLLERS.grbl;
+  const rotarySection = () => {
+    const r = dev.rotary || (dev.rotary = { enabled: false, axis: 'Y', objectDiameter: 60, mmPerRotation: 360 });
+    const set = (k, v) => { r[k] = v; persistDevice(); renderTab(); };
+    const circ = Math.PI * (+r.objectDiameter || 0);
+    const perMm = circ > 0
+      ? (r.axis === 'A' ? 360 / circ : (+r.mmPerRotation || 0) / circ)
+      : 0;
+    const rows = [
+      h('div', { class: 'sec-h' }, 'Rotary'),
+      row('Use rotary', check(r.enabled, v => set('enabled', v), 'Y axis rotates the workpiece'))
+    ];
+    if (r.enabled) {
+      rows.push(
+        row('Output on', seg({ Y: 'Y axis', A: 'A axis' }, r.axis, v => set('axis', v))),
+        row('Object ⌀', num(r.objectDiameter, v => set('objectDiameter', v), { min: 1, max: 500, unit: 'mm' })),
+        r.axis === 'Y'
+          ? row('Per full turn', num(r.mmPerRotation, v => set('mmPerRotation', v), { min: 1, unit: 'mm' }))
+          : null,
+        h('div', { class: 'note' },
+          circ > 0
+            ? `One turn of a ${(+r.objectDiameter).toFixed(1)} mm object is ${circ.toFixed(2)} mm of design height. ` +
+              (r.axis === 'A'
+                ? `1 mm along the surface is written as ${perMm.toFixed(4)}°.`
+                : `1 mm along the surface is written as ${perMm.toFixed(4)} mm of Y travel.`)
+            : 'Enter the diameter of the object being engraved.'),
+        h('div', { class: 'note warn' },
+          'Rotary output has not been verified against hardware. Run a framing pass with the laser off and confirm the object turns the amount you expect before cutting anything.'),
+        r.axis === 'Y'
+          ? h('div', { class: 'small muted' }, 'Per full turn is how much Y travel your controller needs for one complete rotation — measure it once by jogging, or compute it from the axis steps per mm and steps per revolution.')
+          : h('div', { class: 'small muted' }, 'The A axis option needs firmware that accepts a fourth axis. GRBL builds for 3 axes will ignore A moves.')
+      );
+    }
+    return h('div', { class: 'sec' }, ...rows.filter(Boolean));
+  };
+
   body.append(h('div', { class: 'sec' },
     h('div', { class: 'sec-h' }, 'Machine', h('button', { class: 'btn small', onClick: () => run('machine.profile'), html: icon('settings') + 'Change' })),
     h('div', { class: 'note', style: { color: 'var(--text)' } },
@@ -525,6 +560,8 @@ function renderMachineTab(body) {
   setTimeout(() => { con.scrollTop = con.scrollHeight; }, 0);
   updateMachineStatus(machine.status);
   updateJobProgress(machine.job);
+
+  body.append(rotarySection());
 }
 
 function updateMachineStatus(st) {
