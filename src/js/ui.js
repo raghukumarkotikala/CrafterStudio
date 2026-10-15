@@ -276,6 +276,11 @@ function renderLayersTab(body) {
     L.mode === 'fill' ? row('Scan angle', ...num(L.angle || 0, v => { L.angle = v; layerChanged(); }, { min: -180, max: 180, unit: '°' })) : null,
     L.mode !== 'line' ? row('Bidirectional', check(L.bidir, v => { L.bidir = v; layerChanged(); }, 'Scan both directions')) : null,
     L.mode !== 'line' ? row('Overscan', ...num(L.overscan, v => { L.overscan = v; layerChanged(); }, { min: 0, max: 20, unit: 'mm' })) : null,
+    L.mode === 'line' ? row('Kerf', num(L.kerf || 0, v => { L.kerf = v; layerChanged(); }, { min: -5, max: 5, step: 0.01, unit: 'mm' })) : null,
+    L.mode === 'line' && (+L.kerf || 0) !== 0
+      ? h('div', { class: 'small muted', style: { margin: '-2px 0 8px' } },
+        `Cut path moves ${Math.abs(L.kerf / 2).toFixed(3)} mm ${L.kerf > 0 ? 'outward on outlines, inward on holes' : 'inward on outlines, outward on holes'}. The drawing itself is not changed.`)
+      : null,
     row('Air assist', check(L.air, v => { L.air = v; layerChanged(); }, state.device.airAssist ? 'M8 on for this layer' : 'M8 on (disabled in machine profile)')),
     row('Output', check(L.output, v => { L.output = v; layerChanged(); }, 'Include in job')),
     row('Show', check(L.visible, v => { L.visible = v; layerChanged(true); }, 'Visible on canvas'))

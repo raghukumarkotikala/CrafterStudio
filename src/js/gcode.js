@@ -314,6 +314,96 @@ function effective(layer, item) {
 }
 
 /** Plan the whole job. `onlySelection` limits output to selected objects. */
+
+// ---------------------------------------------------------------- kerf
+// The beam removes material either side of the line it follows, so a part cut
+// exactly on its outline comes out undersized by half the kerf all round, and
+// its holes come out oversized by the same. Offsetting outward on outer
+// contours and inward on holes puts the *cut edge* on the drawn line.
+//
+// This runs on clones while the job is built. The drawing is never modified,
+// so changing the kerf figure or turning it off restores the original
+// geometry exactly.
+
+/** A point strictly inside a closed path, usable for containment tests. */
+function interiorPoint(path) {
+  const loc = path.getLocationAt(path.length * 0.5);
+  if (!loc || !loc.normal) return path.bounds.center;
+  const step = loc.normal.normalize(Math.max(0.01, path.length * 1e-4));
+  const a = loc.point.add(step);
+  if (path.contains(a)) return a;
+  const b = loc.point.subtract(step);
+  if (path.contains(b)) return b;
+  return path.bounds.center;
+}
+
+/** Flatten an item into the closed paths it is made of. */
+function closedPathsOf(item) {
+  if (item.className === 'Path') return item.closed ? [item] : [];
+  if (item.getItems) return item.getItems({ match: i => i.className === 'Path' && i.closed });
+  return [];
+}
+
+/**
+ * Offset a layer's vector items by half the kerf, inverting the direction for
+ * anything nested inside another shape so holes shrink while outlines grow.
+ * Returns replacement items; open paths are passed through untouched, since
+ * "inside" is undefined for them.
+ *
+ * Offset results are placed in `container` when one is given. Downstream
+ * toolpath code reads globalMatrix, which is null on an item that belongs to
+ * no project, so the clones cannot simply float free.
+ */
+export function applyKerf(items, kerf, container = null) {
+  const half = kerf / 2;
+  if (!isFinite(half) || Math.abs(half) < 1e-6) return items;
+  if (typeof PaperOffset === 'undefined') return items;
+
+  // Nesting depth is counted across the whole layer, so a hole in one part and
+  // a separate small part elsewhere are told apart.
+  const all = items.flatMap(closedPathsOf);
+  const info = all.map(p => ({ path: p, pt: interiorPoint(p) }));
+
+  const depthOf = p => {
+    let d = 0;
+    for (const o of info) {
+      if (o.path === p) continue;
+      const me = info.find(x => x.path === p);
+      if (o.path.contains(me.pt)) d++;
+    }
+    return d;
+  };
+
+  const out = [];
+  for (const item of items) {
+    const closed = closedPathsOf(item);
+    if (!closed.length) { out.push(item); continue; }
+
+    const pieces = [];
+    let failed = false;
+    for (const p of closed) {
+      // Even depth is an outline and grows; odd depth is a hole and shrinks.
+      const dist = (depthOf(p) % 2 === 0 ? 1 : -1) * half;
+      let r = null;
+      try {
+        r = PaperOffset.offset(p, dist, { join: 'round', insert: false });
+      } catch {
+        r = null;
+      }
+      // An inward offset larger than the feature simply consumes it; dropping
+      // the shape silently would cut nothing, so keep the original and let the
+      // caller warn.
+      if (!r || !r.bounds || r.bounds.width < 1e-6 || r.bounds.height < 1e-6) { failed = true; break; }
+      r.data = { ...p.data };
+      if (container) container.addChild(r);
+      pieces.push(r);
+    }
+    if (failed) { out.push(item); continue; }
+    out.push(...pieces);
+  }
+  return out;
+}
+
 export async function buildJob({ onlySelection = false } = {}) {
   const buf = new MoveBuffer();
   const warnings = [];
@@ -327,6 +417,19 @@ export async function buildJob({ onlySelection = false } = {}) {
   }
   const layers = state.layers.slice().sort((a, b) => a.order - b.order);
   const jobLayers = [];
+  // Kerf clones need to belong to the project to have a globalMatrix, but must
+  // not appear on the canvas or in the design. A hidden layer, removed before
+  // this function returns, satisfies both.
+  let kerfHolder = null;
+  const kerfContainer = () => {
+    if (!kerfHolder) {
+      const active = paper.project.activeLayer;
+      kerfHolder = new paper.Layer();
+      kerfHolder.visible = false;
+      if (active) active.activate();
+    }
+    return kerfHolder;
+  };
   for (const layer of layers) {
     if (!layer.output || !layer.visible) continue;
     const mine = items.filter(i => (i.data.layer || 'L00') === layer.id);
@@ -344,9 +447,19 @@ export async function buildJob({ onlySelection = false } = {}) {
     }
     for (const { s, items: gi } of groups.values()) {
       const rasters = gi.filter(i => i.className === 'Raster');
-      const vectors = gi.filter(i => i.className !== 'Raster');
+      let vectors = gi.filter(i => i.className !== 'Raster');
       for (const r of rasters) await planRaster(r, s, buf, cur, layerIdx, warnings);
       if (!vectors.length) continue;
+      // Kerf only makes sense for cutting; a fill already covers its own area.
+      const kerf = layer.mode === 'line' ? (+layer.kerf || 0) : 0;
+      if (kerf) {
+        const before = vectors.length;
+        vectors = applyKerf(vectors, kerf, kerfContainer());
+        const openCount = vectors.flatMap(v => (v.className === 'Path' ? [v] : (v.getItems ? v.getItems({ match: i => i.className === 'Path' }) : [])))
+          .filter(pp => !pp.closed).length;
+        if (openCount) warnings.push(`${layer.name}: kerf offset skipped ${openCount} open path(s) — "inside" is undefined for a shape that is not closed.`);
+        if (vectors.length < before) warnings.push(`${layer.name}: a shape was too small for a ${kerf} mm kerf offset and was left unchanged.`);
+      }
       const perObject = vectors.map(v => itemPolylines(v, layer.mode === 'line' ? 0.01 : 0.02));
       const polys = perObject.flat();
       if (layer.mode === 'line') planLines(polys, s, buf, cur, layerIdx);
@@ -360,6 +473,8 @@ export async function buildJob({ onlySelection = false } = {}) {
       }
     }
   }
+
+  if (kerfHolder) { kerfHolder.remove(); kerfHolder = null; }
 
   // Bounds and statistics
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;

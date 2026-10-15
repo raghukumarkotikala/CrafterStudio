@@ -28,6 +28,7 @@ export function defaultLayer(i) {
     angle: 0,
     bidir: true,
     overscan: 2,
+    kerf: 0,
     air: false,
     output: true,
     visible: true,

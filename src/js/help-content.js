@@ -62,6 +62,13 @@ export const TOPICS = [
 <tr><td>Envelope</td><td><kbd>W</kbd></td><td>Distort a text object by dragging the corners and edge midpoints of its box. See below.</td></tr>
 <tr><td>Pan</td><td>—</td><td>Or hold Space, or use the middle mouse button, with any tool.</td></tr>
 </table>
+<h4>Kerf: making parts actually fit</h4>
+<p>The beam removes material either side of the line it follows. Cut a 20 mm disc exactly on its outline and it comes out around 19.8 mm; cut a 20 mm hole and it comes out about 20.2 mm. That is why a peg and its socket drawn the same size do not fit.</p>
+<p>Set <b>Kerf</b> on a Line layer to the width your beam removes — typically 0.1–0.3 mm on a diode, more on CO₂, and worth measuring rather than guessing. Crafter Studio then moves the cut path by half that figure: <b>outward on outlines, inward on holes</b>, so the finished edge lands on the line you drew.</p>
+<p>Nesting is worked out automatically. A hole inside a part shrinks; a part sitting inside that hole grows again. Open paths are left alone, because "inside" means nothing for a shape that is not closed.</p>
+<p>The offset is applied while the job is built, never to your drawing. Change the figure or set it back to zero and the original geometry returns exactly — nothing is baked in.</p>
+<p>To measure your kerf: cut a 20 mm square, measure the piece that falls out, and subtract from 20. That difference is the kerf.</p>
+
 <h4>Cleaning up imported paths</h4>
 <p>Traced bitmaps and DXF exports often arrive with thousands of nodes, or with contours that look closed but are not — and an open contour will not fill, it only outlines.</p>
 <ul>
