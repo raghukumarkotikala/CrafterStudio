@@ -1,6 +1,6 @@
 // Text → vector outlines using opentype.js and installed system fonts.
 /* global opentype, paper */
-import { warpItem, isIdentityQuad, arcItem } from './warp.js';
+import { warpItem, isIdentityEnvelope, arcItem, flowAlongPath } from './warp.js';
 import { loadStrokeFonts, strokeFontEntries, isStrokeFont, buildStrokeGlyphs } from './strokefont.js';
 
 const cache = new Map();
@@ -61,6 +61,8 @@ export async function defaultFontPath() {
  * Build a CompoundPath for the given text spec.
  * spec: { content, font (path), size (mm), letterSpacing (mm), lineSpacing (×), align,
  *         arc?: { angle (deg, sign picks the bend direction), flip (read inside) },
+ *         onPath?: { d (SVG path data of the guide, in document coordinates),
+ *                    offset (mm along the guide), flip (other side, reversed) },
  *         envelope?: [[u,v] ×4] corner quad in units of the text's natural box,
  *         envRect?: [x, y, w, h] where that natural box sits, so the warp is
  *                   reproduced in the same place when the words change }
@@ -84,13 +86,25 @@ export async function buildTextPath(spec, at) {
     const pathData = [];
     for (let i = 0; i < glyphs.length; i++) {
       const g = glyphs[i];
-      const p = g.getPath(x, li * lineH, size);
-      const d = p.toPathData(3);
-      // Some fonts yield non-finite coordinates for a glyph. "NaN" in path data
-      // parses as an arc command and crashes the importer, and quietly dropping
-      // the glyph would engrave a word with a letter missing — so refuse it.
+      // Build every glyph at the origin and move it afterwards. Asking
+      // opentype to place a glyph at an offset makes some fonts emit a NaN
+      // coordinate — the outline is sound, the offset arithmetic is not — and
+      // a NaN reaching path data parses as an arc command and takes the
+      // importer down. Translating with paper instead is exact and avoids the
+      // whole class of fault.
+      let d = g.getPath(0, 0, size).toPathData(3);
+      if (d && (x !== 0 || li !== 0) && !/NaN|Infinity/.test(d)) {
+        const tmp = new paper.CompoundPath({ pathData: d, insert: false });
+        tmp.translate(new paper.Point(x, li * lineH));
+        d = tmp.pathData;
+        tmp.remove();
+      }
+      // If it is still non-finite after that, the outline really is broken.
+      // "NaN" in path data parses as an arc command and crashes the importer,
+      // and quietly dropping the glyph would engrave a word with a letter
+      // missing — so refuse it rather than cut something wrong.
       if (/NaN|Infinity/.test(d)) badGlyphs.add(g.name || (g.unicode ? String.fromCodePoint(g.unicode) : '?'));
-      else pathData.push(d);
+      else if (d) pathData.push(d);
       x += g.advanceWidth * scale + tracking;
       if (i < glyphs.length - 1) x += font.getKerningValue(g, glyphs[i + 1]) * scale;
     }
@@ -135,13 +149,26 @@ export async function buildTextPath(spec, at) {
 function finishTextPath(cp, spec, size, at) {
   // Arc first: it bends the strip onto a circle, and an envelope afterwards
   // distorts whatever shape that produced.
-  if (spec.arc && Math.abs(+spec.arc.angle || 0) >= 0.01) {
+  // A guide path and an arc are alternative ways to shape the same strip, so
+  // the explicit guide wins when both are set.
+  if (spec.onPath && spec.onPath.d) {
+    const guide = new paper.Path({ pathData: spec.onPath.d, insert: false });
+    if (guide.length > 0) {
+      flowAlongPath(cp, guide, {
+        offset: +spec.onPath.offset || 0,
+        flip: !!spec.onPath.flip,
+        detail: Math.max(0.1, size / 50)
+      });
+    } else if (at) {
+      cp.bounds.topLeft = at;
+    }
+  } else if (spec.arc && Math.abs(+spec.arc.angle || 0) >= 0.01) {
     if (at) cp.bounds.topLeft = at;
     arcItem(cp, { angle: +spec.arc.angle, flip: !!spec.arc.flip, detail: Math.max(0.1, size / 50) });
   }
 
   const quad = spec.envelope;
-  if (quad && !isIdentityQuad(quad)) {
+  if (quad && !isIdentityEnvelope(quad)) {
     // Anchor the undistorted text where the envelope was drawn, so editing the
     // words re-warps in place instead of jumping.
     if (spec.envRect) {

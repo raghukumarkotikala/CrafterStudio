@@ -421,6 +421,82 @@ export async function openCodeDialog() {
   });
 }
 
+// ================================================================ text on a path
+function splitTextAndGuide() {
+  const txt = state.selection.find(i => i.data && i.data.text);
+  const guide = state.selection.find(i => i !== txt && (i.className === 'Path' || i.className === 'CompoundPath'));
+  return { txt, guide };
+}
+
+export async function openTextOnPathDialog() {
+  const { txt, guide } = splitTextAndGuide();
+  if (!txt) { toast('Select a text object and the path it should follow.'); return; }
+  if (!guide && !(txt.data.text.onPath && txt.data.text.onPath.d)) {
+    toast('Also select the path the text should follow.');
+    return;
+  }
+
+  // Snapshot the guide in document coordinates. Keeping the geometry rather
+  // than a reference means the text survives the guide being deleted, and
+  // still rebuilds when the wording changes.
+  let d = txt.data.text.onPath && txt.data.text.onPath.d;
+  let total = 0;
+  if (guide) {
+    const line = guide.className === 'CompoundPath' ? guide.children[0] : guide;
+    const c = line.clone({ insert: false });
+    c.transform(line.parent ? line.parent.globalMatrix : new paper.Matrix());
+    d = c.pathData;
+    total = c.length;
+  } else {
+    const c = new paper.Path({ pathData: d, insert: false });
+    total = c.length;
+  }
+
+  const cur = txt.data.text.onPath || {};
+  const v = { offset: +cur.offset || 0, flip: !!cur.flip };
+
+  const apply = async () => {
+    const spec = { ...txt.data.text, onPath: { d, offset: v.offset, flip: v.flip } };
+    try {
+      const cp = await buildTextPath(spec);
+      cp.data.layer = txt.data.layer;
+      cp.data.proc = txt.data.proc;
+      txt.replaceWith(cp);
+      styleItem(cp);
+      selectItems(cp);
+      pushHistory();
+    } catch (e) {
+      toast('Could not fit the text: ' + e.message, 'err');
+      return false;
+    }
+  };
+
+  openModal({
+    title: 'Fit text to a path',
+    width: '420px',
+    body: h('div', {},
+      h('div', { class: 'note' }, `Guide is ${total.toFixed(1)} mm long. The text flows from the start of the path; if it is longer than the guide it piles up at the far end.`),
+      row('Start at', num(v.offset, x => { v.offset = x; }, { min: -1000, max: 10000, step: 0.5, unit: 'mm' })),
+      row('Side', check(v.flip, x => { v.flip = x; }, 'Other side, reading the other way')),
+      h('div', { class: 'small muted' }, 'The guide path itself is still a normal object — put it on a layer with Output off, or delete it, once you are happy.')),
+    buttons: [
+      { label: 'Remove from path', onClick: async () => {
+        const spec = { ...txt.data.text };
+        delete spec.onPath;
+        const cp = await buildTextPath(spec);
+        cp.data.layer = txt.data.layer;
+        cp.bounds.topLeft = txt.bounds.topLeft;
+        txt.replaceWith(cp);
+        styleItem(cp);
+        selectItems(cp);
+        pushHistory();
+      } },
+      { label: 'Cancel' },
+      { label: 'Apply', primary: true, onClick: apply }
+    ]
+  });
+}
+
 // ================================================================ materials
 export function openSimplifyDialog() {
   if (!state.selection.length) { toast('Select something first.'); return; }

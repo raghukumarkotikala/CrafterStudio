@@ -77,6 +77,7 @@ export const cmds = {
   'tools.materials': dlg.openMaterialsDialog,
   'tools.materialTest': dlg.openMaterialTestDialog,
 
+  'obj.textPath': dlg.openTextOnPathDialog,
   'obj.simplify': dlg.openSimplifyDialog,
   'obj.join': dlg.openJoinDialog,
   'obj.close': ops.closePaths,

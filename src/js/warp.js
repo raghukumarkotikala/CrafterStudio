@@ -198,6 +198,64 @@ export function warpItem(item, env, { detail = 0.5 } = {}) {
  * angle   total degrees the text spans; sign chooses which way it curves
  * flip    true reads along the inside of the circle (text upside down at the top)
  */
+/**
+ * Flow an item along an arbitrary path: horizontal position becomes distance
+ * travelled along the guide, and height above the baseline becomes distance
+ * out along the guide's normal. Letters therefore lean with the curve and
+ * stand upright relative to it, which is what "text on a path" means.
+ *
+ * guide  a paper.Path (or CompoundPath's first path) to follow
+ * offset distance along the guide at which the text starts, in mm
+ * flip   put the text on the other side of the line, reading the other way
+ */
+export function flowAlongPath(item, guide, { offset = 0, flip = false, detail = 0.4 } = {}) {
+  if (!item || !guide) return item;
+  const line = guide.className === 'CompoundPath' ? guide.children[0] : guide;
+  if (!line || !line.getLocationAt) return item;
+  const total = line.length;
+  if (!(total > 0)) return item;
+
+  const rect = item.bounds;
+  if (!rect || rect.width < 1e-9) return item;
+
+  const baseline = rect.bottom;
+  const dir = flip ? -1 : 1;
+
+  const map = (x, y) => {
+    // Distance along the guide for this x. Clamped so text longer than the
+    // path piles up at the end rather than vanishing to NaN.
+    let s = offset + (x - rect.x) * dir;
+    if (flip) s = offset + (rect.right - x);
+    s = Math.max(0, Math.min(total, s));
+    const loc = line.getLocationAt(s);
+    if (!loc) return [NaN, NaN];
+    const n = loc.normal;
+    if (!n) return [NaN, NaN];
+    // Height above the baseline pushes outward along the normal.
+    const h = (baseline - y) * dir;
+    return [loc.point.x + n.x * h * -1, loc.point.y + n.y * h * -1];
+  };
+
+  const paths = item.className === 'Path' ? [item]
+    : item.getItems({ match: i => i.className === 'Path' });
+  const maxLen = Math.max(0.05, detail);
+  for (const p of paths) {
+    subdivide(p, maxLen);
+    for (const seg of p.segments) {
+      const absIn = seg.point.add(seg.handleIn);
+      const absOut = seg.point.add(seg.handleOut);
+      const [px, py] = map(seg.point.x, seg.point.y);
+      const [ix, iy] = map(absIn.x, absIn.y);
+      const [ox, oy] = map(absOut.x, absOut.y);
+      if (!isFinite(px) || !isFinite(py)) continue;
+      seg.point = new paper.Point(px, py);
+      if (isFinite(ix) && isFinite(iy)) seg.handleIn = new paper.Point(ix - px, iy - py);
+      if (isFinite(ox) && isFinite(oy)) seg.handleOut = new paper.Point(ox - px, oy - py);
+    }
+  }
+  return item;
+}
+
 export function arcItem(item, { angle = 120, flip = false, detail = 0.4 } = {}) {
   if (!item) return item;
   let deg = Math.max(-355, Math.min(355, +angle || 0));
