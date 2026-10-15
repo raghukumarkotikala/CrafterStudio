@@ -435,3 +435,113 @@ export async function traceImage(raster, { threshold = 128, detail = 1, removeBg
   addItem(cp, { layer: state.activeLayer });
   toast(`Traced ${cp.children.length} contour(s).`);
 }
+
+// ---------------------------------------------------------------- path cleanup
+// Traced bitmaps and DXF imports arrive with thousands of nodes and contours
+// that look closed but are not, which stops them filling and bloats the G-code.
+
+function pathsIn(items) {
+  const out = [];
+  for (const it of items) {
+    if (it.className === 'Path') out.push(it);
+    else if (it.getItems) out.push(...it.getItems({ match: i => i.className === 'Path' }));
+  }
+  return out;
+}
+
+/** Reduce node count. tolerance is in mm: larger removes more detail. */
+export function simplifyPaths(tolerance = 0.1) {
+  const items = sel();
+  if (!items.length) return toast('Select something first.');
+  const paths = pathsIn(items);
+  if (!paths.length) return toast('Nothing with nodes in the selection.');
+  let before = 0, after = 0, areaBefore = 0, areaAfter = 0;
+  for (const p of paths) {
+    before += p.segments.length;
+    if (p.closed) areaBefore += Math.abs(p.area);
+    // paper's simplify refits curves; it can fail on degenerate paths, and a
+    // thrown error here would abandon the rest of the selection.
+    try { p.simplify(Math.max(0.001, tolerance)); } catch { /* leave as-is */ }
+    after += p.segments.length;
+    if (p.closed) areaAfter += Math.abs(p.area);
+  }
+  pushHistory();
+  const pct = before ? Math.round((1 - after / before) * 100) : 0;
+  // The tolerance bounds the curve-fitting error, not the overall shape, so a
+  // path can move further than the figure asked for. Report what actually
+  // changed rather than letting it pass unnoticed.
+  const drift = areaBefore > 0 ? Math.abs(1 - areaAfter / areaBefore) * 100 : 0;
+  let msg = `Simplified ${paths.length} path(s): ${before} → ${after} nodes (${pct}% fewer).`;
+  if (drift >= 0.5) msg += ` Area changed ${drift.toFixed(1)}% — undo and lower the tolerance if that matters.`;
+  toast(msg, drift >= 2 ? 'warn' : 'info');
+}
+
+/**
+ * Join open paths whose endpoints are within tolerance of each other, then
+ * close any contour whose own two ends meet.
+ */
+export function joinPaths(tolerance = 0.1) {
+  const items = sel();
+  if (!items.length) return toast('Select something first.');
+  const tol = Math.max(0.001, tolerance);
+  const open = pathsIn(items).filter(p => !p.closed && p.segments.length > 1);
+  if (!open.length) return toast('No open paths in the selection.');
+
+  let joined = 0;
+  // Repeatedly look for a pair of ends that meet. Paths are consumed as they
+  // merge, so loop until a pass finds nothing.
+  let working = open.slice();
+  let merged = true;
+  while (merged) {
+    merged = false;
+    outer:
+    for (let i = 0; i < working.length; i++) {
+      const a = working[i];
+      if (!a.parent) continue;
+      for (let j = i + 1; j < working.length; j++) {
+        const b = working[j];
+        if (!b.parent) continue;
+        const ends = [
+          [a.lastSegment.point, b.firstSegment.point, false],
+          [a.lastSegment.point, b.lastSegment.point, true],
+          [a.firstSegment.point, b.firstSegment.point, 'reverseA'],
+          [a.firstSegment.point, b.lastSegment.point, 'prependA']
+        ];
+        for (const [pa, pb, mode] of ends) {
+          if (pa.getDistance(pb) > tol) continue;
+          if (mode === true) b.reverse();
+          else if (mode === 'reverseA') a.reverse();
+          else if (mode === 'prependA') { a.reverse(); b.reverse(); }
+          a.join(b, tol);
+          joined++;
+          merged = true;
+          working = working.filter(p => p.parent);
+          break outer;
+        }
+      }
+    }
+  }
+
+  let closed = 0;
+  for (const p of working) {
+    if (!p.parent || p.closed) continue;
+    if (p.firstSegment.point.getDistance(p.lastSegment.point) <= tol) {
+      p.closed = true;
+      closed++;
+    }
+  }
+  pushHistory();
+  if (!joined && !closed) return toast(`No endpoints within ${tol} mm of each other.`);
+  toast(`Joined ${joined} path(s), closed ${closed}.`);
+}
+
+/** Force closed regardless of gap size — for contours that must be fillable. */
+export function closePaths() {
+  const items = sel();
+  if (!items.length) return toast('Select something first.');
+  const open = pathsIn(items).filter(p => !p.closed && p.segments.length > 2);
+  if (!open.length) return toast('Nothing open to close.');
+  open.forEach(p => { p.closed = true; });
+  pushHistory();
+  toast(`Closed ${open.length} path(s).`);
+}

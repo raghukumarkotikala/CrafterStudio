@@ -38,6 +38,7 @@ export function initUI() {
   bus.on('history', updateTopbarState);
   bus.on('device', () => { buildTopbar(); if (activeTab === 'machine' || activeTab === 'layers') renderTab(); });
   bus.on('cursor', updateCursor);
+  bus.on('measure', updateMeasure);
   bus.on('view', updateZoom);
   bus.on('prefs', renderStatus);
   bus.on('toast', (m, k) => toast(m, k));
@@ -124,6 +125,7 @@ const TOOL_META = [
   ['pencil', 'pencil', 'Freehand (F)'],
   ['text', 'text', 'Text (T)'],
   ['envelope', 'envelope', 'Envelope — drag the corners of a text object (W)'],
+  ['measure', 'measure', 'Measure a distance (M)'],
   null,
   ['pan', 'pan', 'Pan (Space)']
 ];
@@ -631,9 +633,18 @@ function renderStatus() {
     h('span', { id: 'st-job' }),
     h('span', {}, 'Machine: ', h('b', { id: 'st-machine' }, machine.connected ? machine.status.state : 'Offline')),
     h('span', { class: 'toggle' + (state.prefs.snap ? ' on' : ''), title: 'Snap to grid (%)', onClick: () => run('view.snap') }, `Snap ${state.prefs.snapStep} mm`),
+    h('span', { id: 'st-measure', hidden: true, style: { color: 'var(--warn)' } }),
     h('span', { id: 'st-cursor' }, 'X — Y —'),
     h('span', { id: 'st-zoom' }, ''));
   updateZoom();
+}
+
+function updateMeasure(st) {
+  const el = document.getElementById('st-measure');
+  if (!el) return;
+  if (!st) { el.textContent = ''; el.hidden = true; return; }
+  el.hidden = false;
+  el.textContent = `${fmtNum(st.dist, 2)} mm  ·  Δ ${fmtNum(st.dx, 2)}, ${fmtNum(st.dy, 2)}  ·  ${fmtNum(st.deg, 1)}°`;
 }
 
 function updateCursor(p) {

@@ -422,6 +422,20 @@ export async function openCodeDialog() {
 }
 
 // ================================================================ materials
+export function openSimplifyDialog() {
+  if (!state.selection.length) { toast('Select something first.'); return; }
+  paramDialog('Simplify paths', [
+    { key: 't', label: 'Tolerance', value: 0.05, min: 0.001, max: 5, step: 0.01, unit: 'mm' }
+  ], v => ops.simplifyPaths(v.t));
+}
+
+export function openJoinDialog() {
+  if (!state.selection.length) { toast('Select something first.'); return; }
+  paramDialog('Join open paths', [
+    { key: 't', label: 'Gap tolerance', value: 0.1, min: 0.001, max: 5, step: 0.01, unit: 'mm' }
+  ], v => ops.joinPaths(v.t));
+}
+
 export function openMaterialsDialog() {
   let setKey = materialSetFor(state.device);
   const layer = getLayer(state.activeLayer);
@@ -557,7 +571,7 @@ async function createMaterialTest(v) {
 export function openShortcuts() {
   const rows = [
     ['V', 'Select / transform'], ['N', 'Edit nodes'], ['R', 'Rectangle'], ['E', 'Ellipse'], ['P', 'Polygon'], ['S', 'Star'],
-    ['L', 'Line'], ['B', 'Pen (Bézier)'], ['F', 'Freehand pencil'], ['T', 'Text'], ['W', 'Envelope — distort text by its corners'], ['Space + drag / middle mouse', 'Pan'],
+    ['L', 'Line'], ['B', 'Pen (Bézier)'], ['F', 'Freehand pencil'], ['T', 'Text'], ['W', 'Envelope — distort text by its corners'], ['M', 'Measure a distance'], ['Space + drag / middle mouse', 'Pan'],
     ['Mouse wheel', 'Zoom'], ['Shift + wheel', 'Scroll horizontally'], ['5 / 3', 'Zoom to work area / selection'],
     ['Ctrl+Z / Ctrl+Y', 'Undo / redo'], ['Ctrl+C / X / V / D', 'Copy / cut / paste / duplicate'], ['Delete', 'Delete'],
     ['Ctrl+G / Ctrl+Shift+G', 'Group / ungroup'], ['Ctrl+K / Ctrl+Shift+K', 'Combine / break apart'],

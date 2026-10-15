@@ -683,14 +683,78 @@ const envelopeTool = {
   }
 };
 
+// ------------------------------------------------------------------ measure
+// Drag between two points to read distance and angle. Nothing is added to the
+// design — the line lives on the overlay and disappears when you switch tools.
+const measureTool = {
+  cursor: 'crosshair',
+  from: null,
+  to: null,
+  marks: null,
+
+  exit() { this.clear(); this.from = this.to = null; },
+
+  clear() {
+    if (this.marks) { this.marks.remove(); this.marks = null; }
+  },
+
+  stats() {
+    if (!this.from || !this.to) return null;
+    const d = this.to.subtract(this.from);
+    // Screen Y grows downward, so negate for an angle that reads the way a
+    // protractor does: anticlockwise from east.
+    let deg = Math.atan2(-d.y, d.x) * 180 / Math.PI;
+    if (deg < 0) deg += 360;
+    return { dist: d.length, dx: d.x, dy: d.y, deg };
+  },
+
+  draw() {
+    this.clear();
+    const st = this.stats();
+    if (!st) return;
+    ed.overlay.activate();
+    const g = new paper.Group();
+    g.addChild(new paper.Path.Line({ from: this.from, to: this.to, strokeColor: '#f0a52a', strokeWidth: 1, strokeScaling: false }));
+    const tick = px(5);
+    for (const pt of [this.from, this.to]) {
+      g.addChild(new paper.Path.Circle({ center: pt, radius: tick / 2, fillColor: '#f0a52a', strokeColor: '#fff', strokeWidth: 1, strokeScaling: false }));
+    }
+    this.marks = g;
+    ed.design.activate();
+    bus.emit('measure', st);
+    paper.view.requestUpdate();
+  },
+
+  down(e) {
+    this.from = e.modifiers.shift ? snap(e.point) : e.point;
+    this.to = this.from;
+    this.draw();
+  },
+  drag(e) {
+    if (!this.from) return;
+    let p = e.modifiers.shift ? constrain45(this.from, e.point) : e.point;
+    this.to = p;
+    this.draw();
+  },
+  up() { this.draw(); },
+  move(e) {
+    // With a measurement on screen, keep showing it; otherwise nothing to do.
+    if (!this.from) bus.emit('measure', null);
+  },
+  key(e) {
+    if (e.key === 'Escape') { this.from = this.to = null; this.clear(); bus.emit('measure', null); paper.view.requestUpdate(); return true; }
+    return false;
+  }
+};
+
 const panTool = { cursor: 'grab' };
 
-export { envelopeTool };
+export { envelopeTool, measureTool };
 
 export const TOOLS = {
   select: selectTool, node: nodeTool, rect: rectTool, ellipse: ellipseTool, polygon: polygonTool,
   star: starTool, line: lineTool, pen: penTool, pencil: pencilTool, text: textTool,
-  envelope: envelopeTool, pan: panTool
+  envelope: envelopeTool, measure: measureTool, pan: panTool
 };
 
 export function currentTool() { return TOOLS[state.tool] || selectTool; }

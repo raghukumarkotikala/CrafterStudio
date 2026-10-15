@@ -77,6 +77,9 @@ export const cmds = {
   'tools.materials': dlg.openMaterialsDialog,
   'tools.materialTest': dlg.openMaterialTestDialog,
 
+  'obj.simplify': dlg.openSimplifyDialog,
+  'obj.join': dlg.openJoinDialog,
+  'obj.close': ops.closePaths,
   'obj.code': dlg.openCodeDialog,
   'obj.envelope': () => setTool('envelope'),
   'obj.envelopeReset': () => envelopeTool.reset(),

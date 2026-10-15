@@ -58,9 +58,18 @@ export const TOPICS = [
 <tr><td>Pen (Bézier)</td><td><kbd>B</kbd></td><td>Click for corners, drag for curves. Click the first node to close, Enter or double-click to finish, Backspace removes the last node.</td></tr>
 <tr><td>Freehand</td><td><kbd>F</kbd></td><td>Smoothing option. End near the start point to close the shape.</td></tr>
 <tr><td>Text</td><td><kbd>T</kbd></td><td>Any installed font, converted to outlines, plus eight single-line engraving fonts. Click existing text to edit it.</td></tr>
+<tr><td>Measure</td><td><kbd>M</kbd></td><td>Drag between two points for distance, X/Y difference and angle, shown in the status bar. Shift constrains to 45°. Nothing is added to the design.</td></tr>
 <tr><td>Envelope</td><td><kbd>W</kbd></td><td>Distort a text object by dragging the corners and edge midpoints of its box. See below.</td></tr>
 <tr><td>Pan</td><td>—</td><td>Or hold Space, or use the middle mouse button, with any tool.</td></tr>
 </table>
+<h4>Cleaning up imported paths</h4>
+<p>Traced bitmaps and DXF exports often arrive with thousands of nodes, or with contours that look closed but are not — and an open contour will not fill, it only outlines.</p>
+<ul>
+<li><b>Object → Simplify Paths</b> reduces node count. The tolerance bounds the curve-fitting error rather than the overall shape, so a path can move a little further than the figure you give. The result reports how much the enclosed area changed, and warns if that is more than a couple of percent — undo and lower the tolerance if the part has to fit something.</li>
+<li><b>Object → Join Open Paths</b> welds endpoints that sit within a gap tolerance of each other, then closes any contour whose own two ends meet. This is the usual fix for a DXF that will not fill.</li>
+<li><b>Object → Close Paths</b> forces the selection closed regardless of gap size, for when you know the contour is meant to be solid.</li>
+</ul>
+
 <h4>QR codes and 2D codes</h4>
 <p><i>Object → Insert 2D Code</i> generates <b>QR Code</b>, <b>Data Matrix</b>, <b>GS1 Data Matrix</b>, <b>Aztec</b> and <b>Micro QR</b> as real vector geometry — not a pasted image — so they engrave crisply at any size.</p>
 <p>The dialog previews the code as you type and reports the <b>module size</b>, which is the figure that decides whether it will scan. Below about 0.35 mm per module a diode spot bridges neighbouring modules and the code stops reading; you are warned when that happens. Either enlarge the code or shorten the content — a shorter URL needs fewer modules, so it reads at a smaller size.</p>
