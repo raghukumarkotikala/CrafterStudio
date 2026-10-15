@@ -29,6 +29,8 @@ export function defaultLayer(i) {
     bidir: true,
     overscan: 2,
     kerf: 0,
+    fillStyle: 'scan',
+    fillIndividually: false,
     tabCount: 0,
     tabSize: 0.5,
     air: false,

@@ -218,6 +218,43 @@ function planLines(polys, s, buf, cur, layerIdx) {
 
 // polyGroups: one array of polylines per object. Each object is filled even-odd (so holes in
 // letters/compound paths stay empty); separate objects are unioned where they overlap.
+
+// ---------------------------------------------------------------- offset fill
+// Instead of sweeping back and forth, follow the outline inward in concentric
+// rings. On a diode that often marks more evenly, because the head is always
+// moving along an edge rather than reversing at the end of every scan line,
+// and it leaves a grain that follows the shape.
+
+/**
+ * Concentric contours stepping inward from `item`'s outline.
+ * Each ring is offset from the original rather than from the previous ring, so
+ * the spacing cannot drift as the rings accumulate rounding.
+ */
+export function offsetFillRings(item, interval, container = null, maxRings = 500) {
+  const step = Math.max(0.01, interval);
+  if (typeof PaperOffset === 'undefined') return [];
+  const rings = [];
+  for (let k = 1; k <= maxRings; k++) {
+    // Half a step in for the first ring keeps the whole beam inside the shape.
+    const d = -(k - 0.5) * step;
+    let r = null;
+    try {
+      r = PaperOffset.offset(item, d, { join: 'round', insert: false });
+    } catch {
+      break;
+    }
+    if (!r) break;
+    const b = r.bounds;
+    // Once the inset has eaten the shape there is nothing left to burn.
+    if (!b || b.width < step * 0.5 || b.height < step * 0.5) { r.remove && r.remove(); break; }
+    const empty = r.className === 'CompoundPath' ? !r.children.length : !(r.segments && r.segments.length);
+    if (empty) { r.remove && r.remove(); break; }
+    if (container) container.addChild(r);
+    rings.push(r);
+  }
+  return rings;
+}
+
 function planFill(polyGroups, s, buf, cur, layerIdx) {
   const ang = ((s.angle || 0) * Math.PI) / 180;
   const cos = Math.cos(-ang), sin = Math.sin(-ang);
@@ -552,8 +589,28 @@ export async function buildJob({ onlySelection = false } = {}) {
         if (skipped) warnings.push(`${layer.name}: ${skipped} shape(s) too small for ${tabs.count} × ${tabs.size} mm tabs — cut normally instead.`);
       }
       if (layer.mode === 'line') planLines(polys, s, buf, cur, layerIdx);
-      else {
-        planFill(perObject, s, buf, cur, layerIdx);
+      else if (layer.fillStyle === 'offset') {
+        const ringPolys = [];
+        for (const v of vectors) {
+          for (const ring of offsetFillRings(v, s.interval, kerfContainer())) {
+            ringPolys.push(...itemPolylines(ring, 0.02));
+          }
+        }
+        if (ringPolys.length) planLines(ringPolys, s, buf, cur, layerIdx);
+        else warnings.push(`${layer.name}: nothing was small enough to fill at a ${s.interval} mm interval.`);
+        const open = polys.filter(p => !p.closed);
+        if (open.length) {
+          warnings.push(`${layer.name}: ${open.length} open path(s) cannot be filled and were engraved as lines.`);
+          planLines(open, s, buf, cur, layerIdx);
+        }
+      } else {
+        // Filling each object on its own finishes one shape before starting the
+        // next, instead of sweeping a row across everything at that height.
+        if (layer.fillIndividually) {
+          for (const group of perObject) planFill([group], s, buf, cur, layerIdx);
+        } else {
+          planFill(perObject, s, buf, cur, layerIdx);
+        }
         const open = polys.filter(p => !p.closed);
         if (open.length) {
           warnings.push(`${layer.name}: ${open.length} open path(s) cannot be filled and were engraved as lines.`);

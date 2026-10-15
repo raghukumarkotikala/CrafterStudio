@@ -271,6 +271,14 @@ function renderLayersTab(body) {
     L.mode === 'image' ? row('Min power', ...num(L.minPower || 0, v => { L.minPower = v; layerChanged(); }, { min: 0, max: 100, unit: '%' })) : null,
     row('Speed', ...num(L.speed, v => { L.speed = v; layerChanged(); }, { min: 1, max: 1e6, unit: 'mm/min' })),
     row('Passes', ...num(L.passes, v => { L.passes = Math.round(v); layerChanged(); }, { min: 1, max: 100, step: 1, unit: '' })),
+    L.mode === 'fill' ? row('Fill style', seg({ scan: 'Scan lines', offset: 'Offset' }, L.fillStyle || 'scan', v => { L.fillStyle = v; layerChanged(); })) : null,
+    L.mode === 'fill' && (L.fillStyle || 'scan') === 'scan'
+      ? row('Fill order', check(!!L.fillIndividually, v => { L.fillIndividually = v; layerChanged(); }, 'Finish each shape before the next'))
+      : null,
+    L.mode === 'fill' && L.fillStyle === 'offset'
+      ? h('div', { class: 'small muted', style: { margin: '-2px 0 8px' } },
+        'Follows the outline inward in rings spaced by the line interval. Often marks more evenly than scanning, and leaves a grain that follows the shape.')
+      : null,
     L.mode !== 'line' ? row('Line interval', ...num(L.interval, v => { L.interval = v; layerChanged(); }, { min: 0.01, max: 5, step: 0.01, unit: 'mm' })) : null,
     L.mode !== 'line' ? h('div', { class: 'small muted', style: { margin: '-3px 0 7px 116px' } }, `${fmtNum(10 / L.interval, 1)} lines/cm · ${fmtNum(25.4 / L.interval, 0)} DPI`) : null,
     L.mode === 'fill' ? row('Scan angle', ...num(L.angle || 0, v => { L.angle = v; layerChanged(); }, { min: -180, max: 180, unit: '°' })) : null,

@@ -249,6 +249,17 @@
 <tr><td>Envelope</td><td><kbd>W</kbd></td><td>Distort a text object by dragging the corners and edge midpoints of its box. See below.</td></tr>
 <tr><td>Pan</td><td>—</td><td>Or hold Space, or use the middle mouse button, with any tool.</td></tr>
 </table>
+<h4>Fill style: scan lines or offset</h4>
+<p>A Fill layer can be burned two ways.</p>
+<p><b>Scan lines</b> sweep back and forth like a printer, spaced by the line interval. This is the usual choice and the faster one for solid areas.</p>
+<p><b>Offset</b> follows the outline inward in concentric rings, again spaced by the line interval. The head is always travelling along an edge instead of reversing at the end of every row, which on a diode often marks more evenly, and it leaves a grain that follows the shape rather than running straight across it. Good for lettering and badges; slower on large solid areas.</p>
+<p>Rings are measured from the original outline each time rather than from the previous ring, so the spacing cannot drift as they accumulate. The innermost ring stops before it collapses to nothing.</p>
+
+<h4>Fill order</h4>
+<p>By default a scan row crosses every shape at that height before moving down — efficient, but the head keeps hopping between objects, and each one is only finished at the very end.</p>
+<p><b>Finish each shape before the next</b> fills one object completely, then moves on. In a two-square test this cut trips between the shapes from 30 to 1, burning exactly the same amount of material.</p>
+<p>It is not automatically faster. The same test showed rapid travel rising from 43 mm to 130 mm, because every row now needs its own return move instead of sweeping straight through. It is worth using when shapes sit far apart, or when you want each piece finished before the next is started; it costs time when they are close together.</p>
+
 <h4>Tabs: stopping parts falling out</h4>
 <p>A part that is fully cut free can drop into the machine, tip up into the beam and scorch, or shift on a later pass and ruin its own edge. <b>Tabs</b> leave small uncut bridges that hold each piece in the sheet until you snap it out by hand.</p>
 <p>On a Line layer, set <b>Tabs</b> to the number of bridges per shape and <b>Tab size</b> to how long each one is. Four tabs of 0.5 mm suits small plywood parts; heavier material or bigger pieces want more, or longer. They are spaced evenly around each closed shape, positioned so one never lands on the start point.</p>
