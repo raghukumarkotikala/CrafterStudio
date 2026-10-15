@@ -73,6 +73,81 @@ function pointInPoly(x, y, pts) {
 }
 
 // ---------------------------------------------------------------- planners
+
+// ---------------------------------------------------------------- tabs
+// Small uncut gaps that hold a part in its sheet so it does not drop into the
+// machine, tip up into the beam, or shift on the last pass. The operator snaps
+// them afterwards.
+//
+// Splitting happens after cut ordering has been decided, because that ordering
+// relies on contours still being closed to work out what sits inside what.
+
+/** Point at a given arc length along a polyline. */
+function pointAtLength(pts, segLens, target) {
+  let acc = 0;
+  for (let i = 0; i < segLens.length; i++) {
+    if (acc + segLens[i] >= target) {
+      const t = segLens[i] > 0 ? (target - acc) / segLens[i] : 0;
+      const a = pts[i], b = pts[i + 1];
+      return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+    }
+    acc += segLens[i];
+  }
+  return pts[pts.length - 1].slice();
+}
+
+/**
+ * Break a closed contour into the runs between evenly spaced gaps.
+ * Returns an array of point lists; a single entry means nothing was removed.
+ */
+export function splitForTabs(pts, closed, tabs) {
+  const count = Math.max(0, Math.round((tabs && tabs.count) || 0));
+  const size = (tabs && +tabs.size) || 0;
+  if (!closed || count < 1 || size <= 0 || pts.length < 3) return [pts];
+
+  const segLens = [];
+  let total = 0;
+  for (let i = 1; i < pts.length; i++) {
+    const d = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+    segLens.push(d);
+    total += d;
+  }
+  // Leaving less cut than tab would not free the part at all; cutting the
+  // contour normally is the safer failure.
+  if (total <= 0 || size * count > total * 0.5) return [pts];
+
+  const step = total / count;
+  const runs = [];
+  for (let k = 0; k < count; k++) {
+    // Gaps sit at the middle of each division so one never lands on the seam.
+    const gapEnd = (k + 0.5) * step + size / 2;
+    const nextGapStart = (k + 1 + 0.5) * step - size / 2;
+    const from = gapEnd, to = nextGapStart;
+    if (to - from < 1e-6) continue;
+
+    // Gather the original vertices inside this run. A run can cross the seam,
+    // so each vertex is considered at its own position and one lap further on,
+    // then everything is ordered by distance travelled — collecting them in
+    // index order instead would zig-zag back across the shape.
+    const inside = [];
+    let acc = 0;
+    for (let i = 0; i < segLens.length; i++) {
+      const at = acc + segLens[i];
+      for (const pos of [at, at + total]) {
+        if (pos > from && pos < to) inside.push({ pos, pt: pts[i + 1].slice() });
+      }
+      acc = at;
+    }
+    inside.sort((a, b) => a.pos - b.pos);
+
+    const run = [pointAtLength(pts, segLens, from % total)];
+    for (const v of inside) run.push(v.pt);
+    run.push(pointAtLength(pts, segLens, to % total));
+    if (run.length >= 2) runs.push(run);
+  }
+  return runs.length ? runs : [pts];
+}
+
 function planLines(polys, s, buf, cur, layerIdx) {
   if (!polys.length) return;
   polys.forEach(p => { p.b = polyBounds(p.pts); p.depth = 0; });
@@ -122,16 +197,20 @@ function planLines(polys, s, buf, cur, layerIdx) {
         pts.push(pts[0]);
       }
       if (bestRev) pts = pts.slice().reverse();
-      order.push(pts);
+      order.push({ pts, closed: p.closed, tabs: p.tabs });
       const last = pts[pts.length - 1];
       cx = last[0]; cy = last[1];
     }
   }
   const power = s.power / 100;
   for (let pass = 0; pass < s.passes; pass++) {
-    for (const pts of order) {
-      buf.push(K_RAPID, pts[0][0], pts[0][1], 0, 0, layerIdx);
-      for (let i = 1; i < pts.length; i++) buf.push(K_FEED, pts[i][0], pts[i][1], power, s.speed, layerIdx);
+    for (const entry of order) {
+      // Tabs are applied per pass, so every pass leaves the same bridges
+      // rather than a later pass cutting through an earlier one's tab.
+      for (const pts of splitForTabs(entry.pts, entry.closed, entry.tabs)) {
+        buf.push(K_RAPID, pts[0][0], pts[0][1], 0, 0, layerIdx);
+        for (let i = 1; i < pts.length; i++) buf.push(K_FEED, pts[i][0], pts[i][1], power, s.speed, layerIdx);
+      }
     }
   }
   cur.x = cx; cur.y = cy;
@@ -462,6 +541,16 @@ export async function buildJob({ onlySelection = false } = {}) {
       }
       const perObject = vectors.map(v => itemPolylines(v, layer.mode === 'line' ? 0.01 : 0.02));
       const polys = perObject.flat();
+      if (layer.mode === 'line' && (+layer.tabCount || 0) > 0 && (+layer.tabSize || 0) > 0) {
+        const tabs = { count: +layer.tabCount, size: +layer.tabSize };
+        let skipped = 0;
+        for (const poly of polys) {
+          if (!poly.closed) continue;
+          poly.tabs = tabs;
+          if (splitForTabs(poly.pts, true, tabs).length === 1) skipped++;
+        }
+        if (skipped) warnings.push(`${layer.name}: ${skipped} shape(s) too small for ${tabs.count} × ${tabs.size} mm tabs — cut normally instead.`);
+      }
       if (layer.mode === 'line') planLines(polys, s, buf, cur, layerIdx);
       else {
         planFill(perObject, s, buf, cur, layerIdx);

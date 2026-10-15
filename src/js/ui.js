@@ -276,6 +276,14 @@ function renderLayersTab(body) {
     L.mode === 'fill' ? row('Scan angle', ...num(L.angle || 0, v => { L.angle = v; layerChanged(); }, { min: -180, max: 180, unit: '°' })) : null,
     L.mode !== 'line' ? row('Bidirectional', check(L.bidir, v => { L.bidir = v; layerChanged(); }, 'Scan both directions')) : null,
     L.mode !== 'line' ? row('Overscan', ...num(L.overscan, v => { L.overscan = v; layerChanged(); }, { min: 0, max: 20, unit: 'mm' })) : null,
+    L.mode === 'line' ? row('Tabs', num(L.tabCount || 0, v => { L.tabCount = Math.max(0, Math.round(v)); layerChanged(); }, { min: 0, max: 50, step: 1, unit: 'per shape' })) : null,
+    L.mode === 'line' && (+L.tabCount || 0) > 0
+      ? row('Tab size', num(L.tabSize || 0.5, v => { L.tabSize = v; layerChanged(); }, { min: 0.1, max: 10, step: 0.1, unit: 'mm' }))
+      : null,
+    L.mode === 'line' && (+L.tabCount || 0) > 0
+      ? h('div', { class: 'small muted', style: { margin: '-2px 0 8px' } },
+        `${L.tabCount} uncut bridge${L.tabCount === 1 ? '' : 's'} of ${(+L.tabSize || 0.5).toFixed(1)} mm will hold each closed shape in the sheet. Shapes too small for them are cut normally.`)
+      : null,
     L.mode === 'line' ? row('Kerf', num(L.kerf || 0, v => { L.kerf = v; layerChanged(); }, { min: -5, max: 5, step: 0.01, unit: 'mm' })) : null,
     L.mode === 'line' && (+L.kerf || 0) !== 0
       ? h('div', { class: 'small muted', style: { margin: '-2px 0 8px' } },

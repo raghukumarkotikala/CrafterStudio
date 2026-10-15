@@ -62,6 +62,12 @@ export const TOPICS = [
 <tr><td>Envelope</td><td><kbd>W</kbd></td><td>Distort a text object by dragging the corners and edge midpoints of its box. See below.</td></tr>
 <tr><td>Pan</td><td>—</td><td>Or hold Space, or use the middle mouse button, with any tool.</td></tr>
 </table>
+<h4>Tabs: stopping parts falling out</h4>
+<p>A part that is fully cut free can drop into the machine, tip up into the beam and scorch, or shift on a later pass and ruin its own edge. <b>Tabs</b> leave small uncut bridges that hold each piece in the sheet until you snap it out by hand.</p>
+<p>On a Line layer, set <b>Tabs</b> to the number of bridges per shape and <b>Tab size</b> to how long each one is. Four tabs of 0.5 mm suits small plywood parts; heavier material or bigger pieces want more, or longer. They are spaced evenly around each closed shape, positioned so one never lands on the start point.</p>
+<p>Only closed shapes get tabs — an open line has nothing to fall out of. If a shape is so small that the bridges would leave less than half its outline actually cut, it is cut normally instead and the job warns you, rather than producing a part that never comes free.</p>
+<p>With several passes, every pass leaves the same bridges in the same places, so a later pass cannot cut through an earlier one's tab.</p>
+
 <h4>Kerf: making parts actually fit</h4>
 <p>The beam removes material either side of the line it follows. Cut a 20 mm disc exactly on its outline and it comes out around 19.8 mm; cut a 20 mm hole and it comes out about 20.2 mm. That is why a peg and its socket drawn the same size do not fit.</p>
 <p>Set <b>Kerf</b> on a Line layer to the width your beam removes — typically 0.1–0.3 mm on a diode, more on CO₂, and worth measuring rather than guessing. Crafter Studio then moves the cut path by half that figure: <b>outward on outlines, inward on holes</b>, so the finished edge lands on the line you drew.</p>
