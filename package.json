@@ -15,7 +15,7 @@
     "strokefonts": "node --no-warnings scripts/build-strokefonts.mjs",
     "guide": "node --no-warnings scripts/build-guide.mjs",
     "dist": "npm run library && npm run strokefonts && npm run guide && electron-builder --win --x64",
-    "dist:linux": "npm run library && npm run strokefonts && npm run guide && electron-builder --linux AppImage --x64",
+    "dist:linux": "npm run library && npm run strokefonts && npm run guide && electron-builder --linux AppImage deb --x64",
     "dist:all": "npm run library && npm run strokefonts && npm run guide && electron-builder --win --linux --x64",
     "dist:dir": "electron-builder --dir"
   },
@@ -75,12 +75,19 @@
     },
     "linux": {
       "target": [
-        "AppImage"
+        "AppImage",
+        "deb"
       ],
       "icon": "build/icon.png",
       "category": "Graphics",
-      "syncDesktopName": true,
+      "syncDesktopName": true
+    },
+    "appImage": {
       "artifactName": "CrafterStudio-${version}-x86_64.AppImage"
+    },
+    "deb": {
+      "artifactName": "crafter-studio_${version}_amd64.deb",
+      "maintainer": "Crafter Studio <noreply@crafterstudio.in>"
     }
   }
 }

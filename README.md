@@ -14,9 +14,11 @@ npm start
 | Command | Output (in `dist/`) | Build on |
 |---|---|---|
 | `npm run dist` | `CrafterStudio-Setup-<ver>.exe` (installer), `CrafterStudio-Portable-<ver>.exe` | Windows |
-| `npm run dist:linux` | `CrafterStudio-<ver>-x86_64.AppImage` | Linux (needs `mksquashfs`, so not plain Windows) |
+| `npm run dist:linux` | `CrafterStudio-<ver>-x86_64.AppImage`, `crafter-studio_<ver>_amd64.deb` | Linux (needs `mksquashfs`, so not plain Windows) |
 
 The workflow in `.github/workflows/build.yml` builds both in GitHub Actions (run it manually, or push a `v*` tag).
+
+Two Linux formats, because they fail differently. The **AppImage** runs from anywhere without installing, but Mint 22, Ubuntu 24.04 and newer no longer ship the FUSE 2 library it needs — those users have to `sudo apt install libfuse2t64` or pass `--appimage-extract-and-run`. The **.deb** has no such dependency and puts the app in the menu, which is the better default on Debian, Ubuntu and Mint.
 
 Build with **Node 22.x** (see `.nvmrc`; CI uses the same line). Electron 44 requires Node 22.12.0 or newer, and Node 22 is the newest LTS line that still bundles npm 10 — Node 24 and later ship npm 11, and electron-builder 26 cannot read the dependency tree it produces. Node 20 bundles npm 10 but is below Electron 44's floor. Installers are not committed: an Electron 44 build is about 113 MB, over GitHub's 100 MB per-file limit, so releases carry the binaries.
 

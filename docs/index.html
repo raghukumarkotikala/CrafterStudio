@@ -105,6 +105,9 @@
     padding:16px 18px; color:var(--muted); font-size:14.5px}
   .note.warn{border-color:#6a5220; background:#2b2518; color:#f3c877}
   .note.warn b{color:#ffd98a}
+  .card p.small{font-size:13px; color:var(--dim); margin-top:10px}
+  .card code{background:var(--panel-2); border:1px solid var(--line); border-radius:5px;
+    padding:1px 5px; font-size:12.5px; white-space:nowrap}
 
   /* ---------- footer ---------- */
   footer{border-top:1px solid var(--line); padding:34px 0 46px; color:var(--dim); font-size:13.5px}
@@ -272,7 +275,8 @@
       </div>
       <div class="card">
         <h3>Linux</h3>
-        <p>A single x86-64 AppImage. Mark it executable and run it — no installation, no dependencies to chase.</p>
+        <p>A single x86-64 AppImage. Mark it executable and run it — nothing to install.</p>
+        <p class="small">On <b>Mint 22</b>, <b>Ubuntu 24.04</b> and newer, AppImages need a library those releases no longer ship. If it refuses to start with <code>libfuse.so.2</code> in the message, either install it once with <code>sudo apt install libfuse2t64</code>, or run the file with <code>--appimage-extract-and-run</code>.</p>
         <a class="btn primary" href="https://github.com/raghukumarkotikala/CrafterStudio/releases/latest">Get the latest release</a>
       </div>
       <div class="card">
