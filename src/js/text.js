@@ -1,6 +1,7 @@
 // Text → vector outlines using opentype.js and installed system fonts.
 /* global opentype, paper */
 import { warpItem, isIdentityEnvelope, arcItem, flowAlongPath } from './warp.js';
+import { resolve as resolveVars, hasVariables } from './variables.js';
 import { loadStrokeFonts, strokeFontEntries, isStrokeFont, buildStrokeGlyphs } from './strokefont.js';
 
 const cache = new Map();
@@ -67,11 +68,20 @@ export async function defaultFontPath() {
  *         envRect?: [x, y, w, h] where that natural box sits, so the warp is
  *                   reproduced in the same place when the words change }
  */
+
+// Text objects store their template; the glyphs are built from the resolved
+// value. Stepping to the next merge row therefore re-renders every piece of
+// variable text without the user editing anything.
+function resolveContent(spec) {
+  const raw = spec.content == null ? '' : String(spec.content);
+  return hasVariables(raw) ? resolveVars(raw) : raw;
+}
+
 export async function buildTextPath(spec, at) {
   const size = Math.max(0.5, +spec.size || 10);
   if (isStrokeFont(spec.font)) return finishTextPath(await buildStrokeGlyphs(spec), spec, size, at);
   const font = await loadFont(spec.font);
-  const lines = String(spec.content || '').split(/\r?\n/);
+  const lines = resolveContent(spec).split(/\r?\n/);
   const lineH = size * (spec.lineSpacing || 1.2);
   const tracking = +spec.letterSpacing || 0;
   const scale = size / font.unitsPerEm;

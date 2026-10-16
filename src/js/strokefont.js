@@ -7,6 +7,7 @@
 // scripts/build-strokefonts.mjs.
 /* global paper */
 
+import { resolve as resolveVars, hasVariables } from './variables.js';
 let data = null;
 
 export async function loadStrokeFonts() {
@@ -43,7 +44,10 @@ export async function buildStrokeGlyphs(spec) {
   const scale = size / m.em;
   const lineH = size * (spec.lineSpacing || 1.2);
   const tracking = +spec.letterSpacing || 0;
-  const lines = String(spec.content || '').split(/\r?\n/);
+  // Same resolution as outline text: the object stores the template, the
+  // glyphs are built from the resolved value.
+  const rawContent = spec.content == null ? '' : String(spec.content);
+  const lines = (hasVariables(rawContent) ? resolveVars(rawContent) : rawContent).split(/\r?\n/);
 
   const cp = new paper.CompoundPath({ insert: false });
   const lineWidths = [];

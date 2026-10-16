@@ -115,6 +115,7 @@ function buildMenu() {
         item('Close Paths', 'obj.close'),
         { type: 'separator' },
         item('Insert 2D Code…', 'obj.code'),
+        item('Variable Text…', 'obj.variableText'),
         item('Fit Text to Path…', 'obj.textPath'),
         item('Envelope Text', 'obj.envelope', 'W', true),
         item('Reset Envelope', 'obj.envelopeReset'),

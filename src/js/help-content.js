@@ -121,6 +121,23 @@ export const TOPICS = [
 <p>The guide itself is still an ordinary object and will be cut unless you deal with it: put it on a layer with Output switched off, or delete it once you are happy.</p>
 <p>Text longer than its guide piles up at the far end rather than running off into nothing — shorten the text, lengthen the path, or reduce the size.</p>
 
+<h4>Variable text: names, serials and dates</h4>
+<p>Engraving fifty name tags by retyping the name fifty times is how mistakes get made. Instead, type the text once with <b>placeholders</b> in it and let Crafter Studio fill them in.</p>
+<p>Any text object can contain placeholders — outline fonts and single-line fonts both work, and they can be arced, enveloped or flowed along a path like any other text.</p>
+<table class="tbl">
+<tr><th>Placeholder</th><th>Becomes</th></tr>
+<tr><td><code>{{Name}}</code></td><td>The <b>Name</b> column of the loaded CSV. Any column name works, matched ignoring capitals.</td></tr>
+<tr><td><code>{{serial}}</code></td><td>A running number, with its own start, step and zero padding.</td></tr>
+<tr><td><code>{{index}}</code> / <code>{{count}}</code></td><td>The current row number and the total — <code>{{index}} of {{count}}</code> gives “3 of 50”.</td></tr>
+<tr><td><code>{{date}}</code> / <code>{{time}}</code></td><td>Today as 2026-10-16, and the time as 14:05.</td></tr>
+<tr><td><code>{{date:DD/MM/YYYY}}</code></td><td>A date in your own format: <code>YYYY</code>, <code>YY</code>, <code>MM</code>, <code>DD</code>, <code>HH</code>, <code>mm</code>, <code>ss</code>.</td></tr>
+</table>
+<p>Open <i>Object → Variable Text…</i> to load the data and step through it. <b>Load CSV…</b> takes a spreadsheet export — the first line is the column names, and quoted fields with commas inside them are handled. The dialog lists the columns it found as ready-made placeholders, and previews what each text object currently says.</p>
+<p><b>Prev</b> and <b>Next</b> move to another row and immediately rebuild every piece of variable text on the canvas, so what you see is what will burn. Rows wrap around at either end.</p>
+<p>The object stays anchored on the edge it is aligned to — left-aligned text keeps its left edge, centred text keeps its centre — so a longer name grows outwards instead of dragging a row of tags out of line.</p>
+<p>A placeholder that matches nothing is <b>left on the workpiece as written</b>, braces and all, and the dialog names it. That is deliberate: engraving a blank where a name should be looks like a finished tag, whereas <code>{{Nmae}}</code> burnt into the wood tells you immediately what went wrong.</p>
+<p>The usual batch routine: load the CSV, check the preview, run the job, swap the workpiece, press <b>Next</b>, run again. Serial numbers follow the row, so row 1 with a start of 100 and a step of 5 gives 100, 105, 110 — pad to 4 digits for <code>0100</code>.</p>
+
 <h4>Enveloping text</h4>
 <p>Pick the <b>Envelope</b> tool (<kbd>W</kbd>) with a text object selected, or <i>Object → Envelope Text</i>. Eight handles appear around the text:</p>
 <ul>

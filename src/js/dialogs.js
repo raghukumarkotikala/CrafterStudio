@@ -9,6 +9,7 @@ import { buildTextPath, listFonts, defaultFontPath, registerFontBuffer } from '.
 import * as ops from './ops.js';
 import { machine } from './machine.js';
 import { codeTypes, encode, matrixToItem, moduleSize, defaultCodeSize } from './barcode.js';
+import * as vars from './variables.js';
 
 // ================================================================ machine profile
 export function openProfileDialog({ welcome = false } = {}) {
@@ -495,6 +496,98 @@ export async function openTextOnPathDialog() {
       { label: 'Apply', primary: true, onClick: apply }
     ]
   });
+}
+
+// ================================================================ variable text
+/** Rebuild every text object whose content contains a placeholder. */
+export async function refreshVariableText() {
+  const items = ed.design.getItems({ match: i => i.data && i.data.text && vars.hasVariables(i.data.text.content) });
+  let done = 0;
+  for (const it of items) {
+    try {
+      const cp = await buildTextPath({ ...it.data.text });
+      cp.data.layer = it.data.layer;
+      cp.data.proc = it.data.proc;
+      // Keep the object where the user put it: the resolved words are a
+      // different width, and re-anchoring by top-left would shuffle a row of
+      // tags out of alignment.
+      const b = it.bounds;
+      const align = it.data.text.align;
+      cp.bounds[align === 'center' ? 'center' : align === 'right' ? 'rightCenter' : 'leftCenter'] =
+        b[align === 'center' ? 'center' : align === 'right' ? 'rightCenter' : 'leftCenter'];
+      it.replaceWith(cp);
+      styleItem(cp);
+      done++;
+    } catch (e) {
+      toast('Could not update a text object: ' + e.message, 'err');
+    }
+  }
+  if (done) { pushHistory(); bus.emit('changed'); }
+  return done;
+}
+
+export function openVariableTextDialog() {
+  const st = vars.mergeState();
+  const body = h('div', { style: { width: '520px' } });
+
+  const variableItems = () => ed.design.getItems({ match: i => i.data && i.data.text && vars.hasVariables(i.data.text.content) });
+
+  const render = () => {
+    body.innerHTML = '';
+    const items = variableItems();
+    const rowCount = st.rows.length;
+
+    const nav = h('div', { class: 'ctl' },
+      h('button', { class: 'btn small', onClick: async () => { vars.setIndex(st.index - 1); await refreshVariableText(); render(); } }, '‹ Prev'),
+      h('span', { style: { minWidth: '110px', textAlign: 'center' } },
+        rowCount ? `Row ${st.index + 1} of ${rowCount}` : 'No data loaded'),
+      h('button', { class: 'btn small', onClick: async () => { vars.setIndex(st.index + 1); await refreshVariableText(); render(); } }, 'Next ›'));
+
+    const unknown = [...new Set(items.flatMap(i => vars.unknownTokens(i.data.text.content)))];
+
+    appendAll(body,
+      h('div', { class: 'note', html: 'Put placeholders in any text object: <b>{{Name}}</b> for a CSV column, <b>{{serial}}</b> for a running number, <b>{{date}}</b> or <b>{{date:DD/MM/YYYY}}</b>, plus <b>{{index}}</b> and <b>{{count}}</b>.' }),
+
+      h('div', { class: 'sec-h' }, 'Data'),
+      h('div', { class: 'row' }, h('label', {}, 'CSV file'), h('div', { class: 'ctl' },
+        h('button', { class: 'btn small', onClick: async () => {
+          if (!window.api) { toast('Loading a CSV needs the desktop app.'); return; }
+          const f = await window.api.openFile({ filters: [{ name: 'CSV', extensions: ['csv', 'txt'] }] });
+          if (!f) return;
+          const { headers, rows } = vars.parseCSV(f.text || '');
+          if (!rows.length) { toast('That file has no data rows.', 'err'); return; }
+          vars.setRows(headers, rows, f.name);
+          await refreshVariableText();
+          render();
+          toast(`Loaded ${rows.length} rows: ${headers.join(', ')}`);
+        } }, 'Load CSV…'),
+        h('span', { class: 'muted small' }, st.fileName || 'none'),
+        st.rows.length ? h('button', { class: 'mini', title: 'Unload', onClick: async () => { vars.clearRows(); await refreshVariableText(); render(); } }, '✕') : null)),
+      st.headers.length ? h('div', { class: 'small muted', style: { margin: '-4px 0 8px 116px' } },
+        'Columns: ' + st.headers.map(x => `{{${x}}}`).join('  ')) : null,
+      h('div', { class: 'row' }, h('label', {}, 'Row'), nav),
+
+      h('div', { class: 'sec-h' }, 'Serial number'),
+      row('Start at', num(st.serialStart, async v => { vars.setSerial({ start: v }); await refreshVariableText(); render(); }, { step: 1 })),
+      row('Step by', num(st.serialStep, async v => { vars.setSerial({ step: v }); await refreshVariableText(); render(); }, { step: 1 })),
+      row('Pad to', num(st.serialPad, async v => { vars.setSerial({ padding: v }); await refreshVariableText(); render(); }, { min: 0, max: 12, step: 1, unit: 'digits' })),
+
+      h('div', { class: 'sec-h' }, `Preview — ${items.length} variable text object${items.length === 1 ? '' : 's'}`),
+      items.length
+        ? h('table', { class: 'tbl' },
+          h('tr', {}, h('th', {}, 'Template'), h('th', {}, 'Becomes')),
+          ...items.slice(0, 12).map(i => h('tr', {},
+            h('td', {}, h('code', {}, i.data.text.content)),
+            h('td', {}, vars.resolve(i.data.text.content)))))
+        : h('div', { class: 'note' }, 'No text objects contain placeholders yet. Add one with the Text tool, typing something like “Part {{serial}}”.'),
+      unknown.length
+        ? h('div', { class: 'note warn' }, `Not recognised: ${unknown.map(t => `{{${t}}}`).join(', ')}. These are left as written rather than engraved blank — load a CSV with matching columns, or correct the spelling.`)
+        : null,
+      h('div', { class: 'note' }, 'Step to the next row between pieces: swap the workpiece, press Next, then run the job again.'));
+  };
+
+  render();
+  openModal({ title: 'Variable text', body, width: '560px', buttons: [{ label: 'Close', primary: true }] });
 }
 
 // ================================================================ materials
