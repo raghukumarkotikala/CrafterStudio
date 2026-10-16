@@ -7,6 +7,7 @@ import * as dlg from './dialogs.js';
 import * as jobs from './jobs.js';
 import { setTool, TOOLS, envelopeTool } from './tools.js';
 import * as aiui from './aiui.js';
+import * as camui from './cameraui.js';
 import { openHelp } from './help.js';
 import { showTab } from './ui.js';
 
@@ -69,6 +70,12 @@ export const cmds = {
 
   'machine.profile': () => dlg.openProfileDialog(),
   'machine.connect': jobs.toggleConnect,
+  'machine.camera': camui.openCameraDialog,
+  'view.camera': camui.toggleCameraOverlay,
+  'view.cameraRefresh': () => {
+    if (!camui.cameraOverlayOn()) { camui.toggleCameraOverlay(); return; }
+    if (!camui.refreshOverlay()) bus.emit('toast', 'Could not take a new picture.', 'err');
+  },
   'job.preview': jobs.togglePreview,
   'job.frame': jobs.frameJob,
   'job.start': jobs.startJob,

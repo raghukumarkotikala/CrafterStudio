@@ -229,6 +229,39 @@ export const TOPICS = [
 <p>Crafter Studio cuts inner shapes before outer ones and orders paths to shorten travel, but it cannot know which parts hold your work together.</p>` },
 
   {
+    id: 'camera', title: 'Camera alignment', body: `
+<p>A camera pointed at the bed lets you see the real material behind your design, so a badge can be placed on the offcut that is actually there rather than on a guess. Set it up with <i>Machine → Camera Alignment</i>, and switch it on and off with <kbd>Alt</kbd>+<kbd>C</kbd>.</p>
+<div class="note warn"><b>The overlay is a guide, not a measurement.</b> It is as accurate as the points you marked and the lens correction you dialled in, and it cannot see that the material has shifted since the last picture. Frame the job before cutting and judge the position from the frame, not from the photograph.</div>
+
+<h4>Setting it up</h4>
+<p>Mount the camera so it can see the whole bed and will not be knocked — the calibration describes one fixed viewpoint, and moving the camera afterwards invalidates it. Then:</p>
+<ol>
+<li>Pick the camera. The picture appears straight away and keeps moving, so you can aim it.</li>
+<li>Drag <b>Straighten</b> until the bed edges look straight. Webcams bow straight lines outwards; this undoes it. A camera that already looks straight stays at 0.</li>
+<li>Click the four <b>bed corners</b> in the picture — top-left, top-right, bottom-right, bottom-left, matching the work area on the canvas. Drag any mark to nudge it.</li>
+<li><b>Use this camera</b> saves it and turns the overlay on.</li>
+</ol>
+<p>Mark the corners as precisely as you can: every later position comes from those four clicks, so a corner placed a few pixels out tilts the whole picture. Zoom the window if that helps.</p>
+
+<h4>When the corners are not visible</h4>
+<p>On a big machine, or with the camera close in, the bed corners may be out of frame or hidden under the gantry. Switch <b>Points are</b> to <i>At coordinates I type</i>, put four marks on the bed — engrave four small crosses on a scrap sheet, or use the corners of a taped-down template — and type where each one is in millimetres. Any four points will do as long as you know where they are and they do not sit in a line.</p>
+
+<h4>Reading the result</h4>
+<p>The picture is laid under your design, inside the work area and under the grid, so the design always stays readable on top of it. <b>Opacity</b> fades it back if it competes with your artwork.</p>
+<p><b>Live</b> keeps the picture refreshing twice a second while the overlay is on, which is what you want while sliding material around. Without it the picture is a still, and <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd> takes a new one — the lighter option if the camera is a cheap one or the machine is busy.</p>
+<p>The overlay is never part of your project. It is not saved into the file, not exported to SVG, and never reaches the G-code — it cannot be selected or burnt by accident.</p>
+<p>The camera is only held open while the overlay is on. Turning it off releases it, so another program can use it.</p>
+
+<h4>If it does not line up</h4>
+<ul>
+<li><b>Four points that cross over</b> are refused outright: the outline joining your marks turns red and the fit is rejected. That is almost always a corner clicked out of order.</li>
+<li><b>Straight in the middle, drifting at the edges</b> means the lens correction is wrong. Adjust <b>Straighten</b> and re-mark the corners.</li>
+<li><b>Everything shifted</b> usually means the camera moved. Recalibrate; there is no way to recover a viewpoint that has changed.</li>
+<li><b>A warning that the camera opened at a different size</b> than it was calibrated at means the marks were rescaled to fit. That is usually right, but check it before relying on it.</li>
+<li><b>“The camera is already in use”</b> — close the other program, including a video call, and try again.</li>
+</ul>` },
+
+  {
     id: 'rotary', title: 'Rotary axis', body: `
 <p>A rotary attachment turns the workpiece instead of moving the bed, so a design wraps around a cylinder — a tumbler, a pen, a ring. Set it up under <b>Machine → Rotary</b>.</p>
 <div class="note warn"><b>Not verified against hardware.</b> This output has been checked mathematically but never run on a real rotary. Before cutting anything, frame the job with the laser off and confirm the object turns as far as you expect.</div>

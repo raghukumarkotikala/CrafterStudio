@@ -13,6 +13,12 @@ export const ed = {
 
 const HANDLE_PX = 8;
 
+// Camera alignment overlay. The picture lives in the background layer, under
+// the grid and never in the design, so it cannot be selected, saved or burnt.
+let camCanvas = null;
+let camRaster = null;
+let camOpacity = 0.6;
+
 export function initEditor(canvas, rulerTop, rulerLeft) {
   ed.canvas = canvas;
   ed.rulerTop = rulerTop;
@@ -48,6 +54,13 @@ export function drawWorkArea() {
   const shadow = new paper.Path.Rectangle({ rectangle: [2, 2, W, H], fillColor: 'rgba(0,0,0,0.35)' });
   shadow.data.bg = true;
   new paper.Path.Rectangle({ rectangle: [0, 0, W, H], fillColor: '#fbfbfb' });
+  camRaster = null;
+  if (camCanvas) {
+    camRaster = new paper.Raster(camCanvas);
+    camRaster.bounds = new paper.Rectangle(0, 0, W, H);
+    camRaster.opacity = camOpacity;
+    camRaster.locked = true;
+  }
   const step = state.prefs.gridStep || 10;
   const grid = new paper.Group();
   for (let x = step; x < W; x += step) {
@@ -70,6 +83,35 @@ export function drawWorkArea() {
   new paper.Path.Circle({ center: [ox, oy], radius: Math.max(1, L * 0.12), fillColor: '#e0304a' });
   ed.design.activate();
   paper.view.requestUpdate();
+}
+
+/**
+ * Show a straightened camera picture of the bed, or clear it with null.
+ *
+ * A live refresh only swaps the raster's image: rebuilding the whole work area
+ * several times a second would throw away and recreate every grid line.
+ */
+export function setCameraImage(canvas, opacity) {
+  if (opacity != null) camOpacity = opacity;
+  const sameShape = camCanvas && canvas && camRaster && camRaster.parent &&
+    camCanvas.width === canvas.width && camCanvas.height === canvas.height;
+  camCanvas = canvas;
+  if (sameShape) {
+    const { workW: W, workH: H } = state.device;
+    camRaster.image = canvas;
+    camRaster.bounds = new paper.Rectangle(0, 0, W, H);
+    camRaster.opacity = camOpacity;
+    paper.view.requestUpdate();
+    return;
+  }
+  drawWorkArea();
+}
+
+export function cameraImageShown() { return !!camCanvas; }
+
+export function setCameraOpacity(v) {
+  camOpacity = v;
+  if (camRaster) { camRaster.opacity = v; paper.view.requestUpdate(); }
 }
 
 // ---------------------------------------------------------------- view

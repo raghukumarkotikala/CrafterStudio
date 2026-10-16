@@ -144,6 +144,8 @@ function buildMenu() {
         { type: 'separator' },
         item('Toggle Grid Snap', 'view.snap', '%', true),
         item('Toggle Toolpath Preview', 'job.preview', 'Alt+P'),
+        item('Toggle Camera Overlay', 'view.camera', 'Alt+C'),
+        item('Refresh Camera Picture', 'view.cameraRefresh', 'Alt+Shift+C'),
         { type: 'separator' },
         { role: 'togglefullscreen' },
         { role: 'toggleDevTools' }
@@ -154,6 +156,7 @@ function buildMenu() {
       submenu: [
         item('Machine Profile & Work Area…', 'machine.profile', 'CmdOrCtrl+Shift+M'),
         item('Connect / Disconnect', 'machine.connect'),
+        item('Camera Alignment…', 'machine.camera'),
         { type: 'separator' },
         item('Frame Job', 'job.frame'),
         item('Start Job', 'job.start', 'F5'),
@@ -211,7 +214,12 @@ function createWindow() {
       productId: p.productId
     })));
   });
-  ses.setPermissionCheckHandler((wc, permission) => permission === 'serial' || permission === 'clipboard-read' || permission === 'clipboard-sanitized-write');
+  // 'media' is the camera, used by the alignment overlay. Everything not
+  // listed here stays denied: the app has no business asking for location,
+  // notifications or a microphone.
+  const ALLOWED = ['serial', 'media', 'clipboard-read', 'clipboard-sanitized-write'];
+  ses.setPermissionCheckHandler((wc, permission) => ALLOWED.includes(permission));
+  ses.setPermissionRequestHandler((wc, permission, done) => done(ALLOWED.includes(permission)));
   ses.setDevicePermissionHandler(details => details.deviceType === 'serial');
 
   win.loadFile(path.join(__dirname, 'src', 'index.html'));

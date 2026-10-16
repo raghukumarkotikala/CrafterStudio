@@ -64,6 +64,17 @@ export const state = {
     alignTo: 'selection',
     ...loadJSON('crafter.prefs', {})
   },
+  // Camera alignment. imagePts are in undistorted camera pixels, bedPts the
+  // matching positions on the bed in mm, so the calibration survives a resize
+  // of the preview but not a change of camera resolution — frameW/frameH are
+  // kept so that case can be spotted and rescaled.
+  camera: {
+    deviceId: '', label: '', k: 0,
+    imagePts: null, bedPts: null,
+    frameW: 0, frameH: 0,
+    opacity: 0.6, pxPerMm: 4, live: false,
+    ...loadJSON('crafter.camera', {})
+  },
   firstRun: loadJSON('crafter.device', null) === null,
   layers: PALETTE.map((c, i) => defaultLayer(i)),
   activeLayer: 'L00',
@@ -86,6 +97,10 @@ export function persistDevice() {
 
 export function persistPrefs() {
   saveJSON('crafter.prefs', state.prefs);
+}
+
+export function persistCamera() {
+  saveJSON('crafter.camera', state.camera);
 }
 
 export function setDirty(v = true) {
