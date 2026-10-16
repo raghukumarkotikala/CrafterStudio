@@ -166,12 +166,12 @@
 
       <div class="card">
         <h3><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18z"/><path d="M2 2l7.6 7.6"/><circle cx="11" cy="11" r="2"/></svg>Vector drawing</h3>
-        <p>Rectangles, ellipses, polygons, stars, Bézier pen, freehand pencil and node editing. Text in any installed font, bent around an arc, distorted by its corners, or set in <b>single-line fonts</b> that engrave in one pass instead of outlining and filling — far less laser travel, and a cleaner mark on metal.</p>
+        <p>Rectangles, ellipses, polygons, stars, Bézier pen, freehand pencil and node editing. Text in any installed font — bent around an arc, <b>flowed along any curve you draw</b>, distorted by its corners, or set in <b>single-line fonts</b> that engrave in one pass instead of outlining and filling, for far less laser travel and a cleaner mark on metal.</p>
       </div>
 
       <div class="card">
         <h3><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h10v6h6v10H10v-6H4z"/></svg>Path operations</h3>
-        <p>Union, difference, intersection, exclusion, divide and offset. Grid and circular arrays, align and distribute, full undo history.</p>
+        <p>Union, difference, intersection, exclusion, divide and offset. Grid and circular arrays, align and distribute, full undo history. A <b>measure tool</b> for distance and angle, and cleanup that <b>simplifies</b> over-dense traces and <b>joins</b> the open contours that stop a DXF filling.</p>
       </div>
 
       <div class="card">
@@ -206,12 +206,32 @@
 
       <div class="card">
         <h3><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Smart G-code</h3>
-        <p>GRBL, grblHAL/FluidNC, Marlin and Smoothieware. Cuts inner shapes before outer, shortens travel, estimates job time, previews the toolpath and drives a rotary axis.</p>
+        <p>GRBL, grblHAL/FluidNC, Marlin and Smoothieware. Cuts inner shapes before outer, shortens travel, estimates job time, previews the toolpath and drives a rotary axis. Ruida CO₂ machines can export a planned <b>.rd job file</b> with layers, speeds and powers already set.</p>
       </div>
 
       <div class="card">
         <h3><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v14M8 6l4-4 4 4M7 11v2a3 3 0 0 0 3 3h4a3 3 0 0 0 3-3v-2"/><circle cx="12" cy="19" r="2.5"/></svg>Drive it over USB</h3>
         <p>Connect, jog, home, set origin, frame the job and run it with live progress and a console. Around 380 machine profiles from 46 brands.</p>
+      </div>
+
+      <div class="card">
+        <h3><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4"/><path d="M15 4h4a1 1 0 0 1 1 1v4"/><path d="M20 15v4a1 1 0 0 1-1 1h-4"/><path d="M9 20H5a1 1 0 0 1-1-1v-4"/><path d="M8 12h8"/></svg>Parts that actually fit</h3>
+        <p><b>Kerf</b> compensation moves the cut by half the width your beam removes — outward on outlines, inward on holes — so a 20 mm disc comes out 20 mm instead of 19.8, and a peg fits its socket. <b>Tabs</b> leave small bridges that hold each piece in the sheet until you snap it out, instead of letting it drop into the machine.</p>
+      </div>
+
+      <div class="card">
+        <h3><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="6.5" y="6.5" width="11" height="11" rx="1.5"/><rect x="10" y="10" width="4" height="4" rx="1"/></svg>Fills that mark evenly</h3>
+        <p>Scan back and forth like a printer, or follow the outline inward in <b>concentric rings</b> — the head stays on an edge instead of reversing every row, which marks more evenly on a diode and leaves a grain that follows the shape. Fill shapes one at a time when they sit far apart.</p>
+      </div>
+
+      <div class="card">
+        <h3><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4H7a2 2 0 0 0-2 2v3a2 2 0 0 1-2 2 2 2 0 0 1 2 2v3a2 2 0 0 0 2 2h2"/><path d="M15 4h2a2 2 0 0 1 2 2v3a2 2 0 0 0 2 2 2 2 0 0 0-2 2v3a2 2 0 0 1-2 2h-2"/><path d="M10 12h4"/></svg>Batches without retyping</h3>
+        <p>Type the placeholder once. <code>{{Name}}</code> comes from a CSV column, <code>{{serial}}</code> is a running number with its own start, step and padding, plus dates and row counts. Step through the rows and every piece of text on the canvas redraws. Fifty name tags, typed once.</p>
+      </div>
+
+      <div class="card">
+        <h3><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="12.5" r="3.5"/></svg>See the real material</h3>
+        <p>Point a camera at the bed and your design sits on top of what is actually there, so a badge lands on the offcut rather than on a guess. Lens bowing and the viewing angle are both corrected from four points you mark. A guide, not a measurement — frame the job before you cut.</p>
       </div>
 
     </div>
