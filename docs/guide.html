@@ -183,7 +183,7 @@
       <li><a href="#camera">Camera alignment</a></li>
       <li><a href="#rotary">Rotary axis</a></li>
       <li><a href="#running">Running a job over USB</a></li>
-      <li><a href="#export">Exporting G-code</a></li>
+      <li><a href="#export">Exporting G-code and job files</a></li>
       <li><a href="#ai">AI features</a></li>
       <li><a href="#safety">Safety</a></li>
       <li><a href="#trouble">Troubleshooting</a></li>
@@ -508,10 +508,24 @@
     </section>
 
     <section class="topic" id="export">
-      <h2>Exporting G-code</h2>
+      <h2>Exporting G-code and job files</h2>
       <p><i>File → Export G-code</i> (Ctrl+E) writes <code>.gcode</code>, <code>.nc</code> or <code>.gc</code> for GRBL 1.1, GRBL, grblHAL / FluidNC, Marlin, Smoothieware — the route if you run from an SD card or another sender.</p>
 <p>Output is generated for your profile's firmware and Max S value, inner shapes before outer, paths ordered to shorten travel, with your start and end G-code wrapped around it. The estimated time appears before you save.</p>
-<p>For Ruida, Trocen, TopWisdom, EZCAD galvo and cloud machines, use <i>File → Export SVG</i> and open that in the manufacturer's software or LightBurn. The design keeps its true size and layer colours.</p>
+<p>For Trocen, TopWisdom, EZCAD galvo and cloud machines, use <i>File → Export SVG</i> and open that in the manufacturer's software or LightBurn. The design keeps its true size and layer colours.</p>
+
+<h4>Ruida job files</h4>
+<div class="note warn"><b>Not verified against hardware.</b> Crafter Studio has never been run against a Ruida controller, and no published specification for the format exists — it is written from the community's reverse-engineering notes. Open the file in RDWorks or LightBurn first and look at it. If the file will not open at all, nothing is lost; the danger would be a file that opens and is subtly wrong, which is exactly what looking at it catches.</div>
+<p><i>File → Export Ruida .rd</i> writes a job file for the DSP controllers in most larger CO₂ machines — Monport, OMTech, Thunder, Aeon, Boss, Kern and others. Load it from a USB stick, or through RDWorks.</p>
+<p>The advantage over exporting SVG is that the job is already planned: your layers arrive with their speed, power range and colour, in run order, with fills already converted to scan lines. An SVG arrives as bare outlines and the settings have to be entered again at the other end.</p>
+<p>Before the file is written you are shown what is <i>in</i> it. Those figures are read back out of the finished bytes rather than copied from the plan that produced them, so if the writer were wrong the wrong numbers would appear there. Check the speeds, the power ranges and the extent against what you expect.</p>
+<table class="tbl">
+<tr><th>Thing to know</th><th>Why</th></tr>
+<tr><td>Passes are already expanded</td><td>Three passes means the geometry appears three times in the file and the layer says one pass. Do not also set a repeat count on the machine.</td></tr>
+<tr><td>Rotary is the controller's job</td><td>If Crafter Studio's rotary is switched on, the file is still written flat and you are warned. Set the rotary up on the machine instead.</td></tr>
+<tr><td>Eight layers on the panel</td><td>More than eight will be in the file but may not all be listed on the controller's display.</td></tr>
+<tr><td>Scramble key</td><td>The file is obfuscated with a key, normally 136 (0x88). A few vendors use a different one. If the machine rejects an otherwise good file, this is the setting to try.</td></tr>
+</table>
+<p>Driving a Ruida machine directly over the network is <b>not</b> supported and is not planned without a machine to test against. A controller runs an uploaded job from its own memory, so unlike a G-code sender there is no stopping it by closing the connection — that is not something to ship on a guess.</p>
       <p class="totop"><a href="#top">Back to contents</a></p>
     </section>
 

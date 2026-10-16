@@ -61,6 +61,7 @@ function buildMenu() {
         { type: 'separator' },
         item('Export G-code…', 'file.exportGcode', 'CmdOrCtrl+E'),
         item('Export SVG…', 'file.exportSvg'),
+        item('Export Ruida .rd…', 'file.exportRd'),
         { type: 'separator' },
         { role: 'quit', label: 'Exit' }
       ]
@@ -339,7 +340,10 @@ ipcMain.handle('dialog:save', async (e, opts = {}) => {
     if (r.canceled || !r.filePath) return null;
     target = r.filePath;
   }
-  fs.writeFileSync(target, opts.content, 'utf8');
+  // Binary payloads (Ruida .rd) arrive base64-encoded: typed arrays do not
+  // survive the context bridge intact, and a string does.
+  if (opts.base64) fs.writeFileSync(target, Buffer.from(opts.content, 'base64'));
+  else fs.writeFileSync(target, opts.content, 'utf8');
   return { path: target, name: path.basename(target) };
 });
 

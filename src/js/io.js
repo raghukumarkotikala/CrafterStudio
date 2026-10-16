@@ -4,6 +4,8 @@ import { state, bus, PALETTE, defaultLayer, setDirty } from './state.js';
 import { ed, addItem, styleItem, pushHistory, resetHistory, clearSelection, restyleAll, drawWorkArea, fitWorkArea, select } from './editor.js';
 import { loadImage, normalizeImage, processedCanvas, DEFAULT_ADJ } from './imageproc.js';
 import { buildJob, emitGcode } from './gcode.js';
+import { emitRuida, describeRuida, DEFAULT_MAGIC } from './ruida.js';
+import { openRuidaSummary } from './dialogs.js';
 import { toast } from './ops.js';
 
 const IMAGE_EXT = ['.png', '.jpg', '.jpeg', '.bmp', '.gif', '.webp'];
@@ -39,6 +41,21 @@ async function saveText(content, defaultName, filters, path) {
   if (window.api) return window.api.saveFile({ content, defaultName, filters, path });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([content], { type: 'text/plain' }));
+  a.download = defaultName;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  return { name: defaultName };
+}
+
+async function saveBinary(bytes, defaultName, filters) {
+  let bin = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  }
+  const content = btoa(bin);
+  if (window.api) return window.api.saveFile({ content, base64: true, defaultName, filters });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([bytes], { type: 'application/octet-stream' }));
   a.download = defaultName;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 5000);
@@ -427,6 +444,25 @@ export async function exportGcode() {
   job.warnings.forEach(w => toast(w, 'warn'));
   const g = emitGcode(job);
   await saveText(g, (state.fileName.replace(/\.crafter$/i, '') || 'job') + '.gcode', [{ name: 'G-code', extensions: ['gcode', 'nc', 'gc'] }]);
+}
+
+export async function exportRuida() {
+  const job = await buildJob();
+  if (!job.buf.n) return toast('Nothing to output — add objects to an enabled layer.');
+  job.warnings.forEach(w => toast(w, 'warn'));
+
+  const out = emitRuida(job, state.device, { magic: +state.device.ruidaMagic || DEFAULT_MAGIC });
+  out.warnings.forEach(w => toast(w, 'warn'));
+  if (!out.bytes.length) return toast('Nothing was written.', 'err');
+
+  // Read the finished bytes back rather than reporting what was intended: if
+  // the writer is wrong, this says so before the file reaches a machine.
+  const got = describeRuida(out.bytes, +state.device.ruidaMagic || DEFAULT_MAGIC);
+  const name = (state.fileName.replace(/\.crafter$/i, '') || 'job') + '.rd';
+  const ok = await openRuidaSummary(name, out, got);
+  if (!ok) return;
+  const r = await saveBinary(out.bytes, name, [{ name: 'Ruida job', extensions: ['rd'] }]);
+  if (r) toast(`Saved ${r.name}. Open it in RDWorks or LightBurn and check the geometry before running it.`);
 }
 
 export async function exportSVG() {

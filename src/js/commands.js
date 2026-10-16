@@ -19,6 +19,7 @@ export const cmds = {
   'file.import': io.importFile,
   'file.exportGcode': io.exportGcode,
   'file.exportSvg': io.exportSVG,
+  'file.exportRd': io.exportRuida,
 
   'edit.undo': undo,
   'edit.redo': redo,

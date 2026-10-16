@@ -8,7 +8,7 @@ export const CONTROLLERS = {
   grblhal: { label: 'grblHAL / FluidNC', direct: true, gcode: true, sMax: 1000, baud: 115200 },
   marlin: { label: 'Marlin (laser inline, M3 I)', direct: true, gcode: true, sMax: 255, baud: 115200 },
   smoothie: { label: 'Smoothieware (S 0–1)', direct: true, gcode: true, sMax: 1, baud: 115200 },
-  ruida: { label: 'Ruida DSP (export SVG/DXF for RDWorks/LightBurn)', direct: false, gcode: false, sMax: 1000, baud: 115200 },
+  ruida: { label: 'Ruida DSP (export .rd job file, or SVG for RDWorks/LightBurn)', direct: false, gcode: false, sMax: 1000, baud: 115200 },
   trocen: { label: 'Trocen / AWC (export only)', direct: false, gcode: false, sMax: 1000, baud: 115200 },
   topwisdom: { label: 'TopWisdom (export only)', direct: false, gcode: false, sMax: 1000, baud: 115200 },
   m2nano: { label: 'Lihuiyu M2 Nano (K40 stock, export only)', direct: false, gcode: false, sMax: 1000, baud: 115200 },

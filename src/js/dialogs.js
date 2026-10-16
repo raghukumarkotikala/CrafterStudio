@@ -10,6 +10,7 @@ import * as ops from './ops.js';
 import { machine } from './machine.js';
 import { codeTypes, encode, matrixToItem, moduleSize, defaultCodeSize } from './barcode.js';
 import * as vars from './variables.js';
+import { describeRuida, DEFAULT_MAGIC } from './ruida.js';
 
 // ================================================================ machine profile
 export function openProfileDialog({ welcome = false } = {}) {
@@ -588,6 +589,82 @@ export function openVariableTextDialog() {
 
   render();
   openModal({ title: 'Variable text', body, width: '560px', buttons: [{ label: 'Close', primary: true }] });
+}
+
+/**
+ * Shown before a Ruida .rd file is written. Everything in the table is read
+ * back out of the finished bytes, not taken from the plan that produced them:
+ * if the writer is wrong, the wrong numbers appear here rather than on a
+ * 100 W machine.
+ */
+export function openRuidaSummary(name, out, got) {
+  const mm = v => (v == null ? '—' : fmtNum(v / 1000, 2) + ' mm');
+  const dev = state.device;
+  return new Promise(resolve => {
+    let decided = false;
+    const magicRow = row('Scramble key', num(+dev.ruidaMagic || DEFAULT_MAGIC, v => {
+      dev.ruidaMagic = Math.max(0, Math.min(255, Math.round(v)));
+      persistDevice();
+    }, { min: 0, max: 255, step: 1 }), h('span', { class: 'muted small' },
+      'Leave at 136 (0x88) unless your machine refuses the file.'));
+
+    const b = got.bounds || {};
+    const body = h('div', { style: { width: '520px' } },
+      h('div', { class: 'note warn' },
+        h('b', {}, 'Not verified against hardware. '),
+        'Crafter Studio has never been run against a Ruida controller. Open this file in RDWorks or LightBurn first, look at the geometry and the layer settings, and run it with the lid open before you cut anything.'),
+      dev.controller !== 'ruida'
+        ? h('div', { class: 'note warn' }, `${dev.name} is set to “${dev.controller}”, not Ruida. The file will be written anyway.`)
+        : null,
+      h('div', { class: 'sec-h' }, 'What was written'),
+      h('table', { class: 'tbl' },
+        h('tr', {}, h('th', {}, 'File'), h('td', {}, name)),
+        h('tr', {}, h('th', {}, 'Size'), h('td', {}, `${(out.bytes.length / 1024).toFixed(1)} kB`)),
+        h('tr', {}, h('th', {}, 'Cuts'), h('td', {}, `${got.counts.cut.toLocaleString()} cutting moves, ${got.counts.move.toLocaleString()} travels`)),
+        h('tr', {}, h('th', {}, 'Encoding'), h('td', {}, `${got.counts.rel.toLocaleString()} relative, ${got.counts.abs.toLocaleString()} absolute`)),
+        h('tr', {}, h('th', {}, 'Extent'), h('td', {}, got.extent
+          ? `${mm(got.extent.x0)} … ${mm(got.extent.x1)} across, ${mm(got.extent.y0)} … ${mm(got.extent.y1)} down` : '—')),
+        h('tr', {}, h('th', {}, 'Declared box'), h('td', {}, `${mm(b.x0)}, ${mm(b.y0)} to ${mm(b.x1)}, ${mm(b.y1)}`)),
+        h('tr', {}, h('th', {}, 'Ends properly'), h('td', {}, got.end ? 'yes' : 'no — the file has no end marker'))),
+      h('div', { class: 'sec-h' }, 'Layers, read back from the file'),
+      h('table', { class: 'tbl' },
+        h('tr', {}, h('th', {}, '#'), h('th', {}, 'Name'), h('th', {}, 'Speed'), h('th', {}, 'Power'), h('th', {}, 'Colour')),
+        ...got.layers.map(L => {
+          const mine = state.layers.find(x => x.color && colourMatches(x.color, L.colour));
+          return h('tr', {},
+            h('td', {}, String(L.index + 1)),
+            h('td', {}, mine ? mine.name : '—'),
+            h('td', {}, L.speed == null ? '—' : `${Math.round(L.speed)} mm/min`),
+            h('td', {}, L.power == null ? '—' : `${fmtNum(L.minPower || 0, 0)}–${fmtNum(L.power, 0)}%`),
+            h('td', {}, mine ? h('span', { style: { color: mine.color } }, '■') : '—'));
+        })),
+      got.unknown.length
+        ? h('div', { class: 'note warn' }, `${got.unknown.length} byte${got.unknown.length === 1 ? '' : 's'} could not be read back. The file is probably malformed — please report it.`)
+        : null,
+      h('div', { class: 'sec-h' }, 'Machine'),
+      magicRow);
+
+    openModal({
+      title: 'Export Ruida job file',
+      body,
+      width: '580px',
+      onClose: () => { if (!decided) resolve(false); },
+      buttons: [
+        { label: 'Cancel', onClick: () => { decided = true; resolve(false); } },
+        { label: 'Save file', primary: true, onClick: () => { decided = true; resolve(true); } }
+      ]
+    });
+  });
+}
+
+// The file stores colour as blue-green-red, so a match has to be made the same
+// way round rather than by comparing the hex string.
+function colourMatches(hex, bgr) {
+  if (bgr == null) return false;
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex);
+  if (!m) return false;
+  const n = parseInt(m[1], 16);
+  return (((n & 0xFF) << 16) | (n & 0xFF00) | ((n >> 16) & 0xFF)) === bgr;
 }
 
 // ================================================================ materials
