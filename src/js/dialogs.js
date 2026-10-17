@@ -524,6 +524,7 @@ export async function refreshVariableText() {
     }
   }
   if (done) { pushHistory(); bus.emit('changed'); }
+  bus.emit('variables');
   return done;
 }
 
@@ -559,6 +560,7 @@ export function openVariableTextDialog() {
           if (!rows.length) { toast('That file has no data rows.', 'err'); return; }
           vars.setRows(headers, rows, f.name);
           await refreshVariableText();
+          bus.emit('variables');
           render();
           toast(`Loaded ${rows.length} rows: ${headers.join(', ')}`);
         } }, 'Load CSV…'),

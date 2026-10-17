@@ -91,8 +91,17 @@ function outputBounds() {
   return b ? { x: b.x, y: b.y, w: b.width, h: b.height } : null;
 }
 
+// A machine Crafter Studio cannot drive still has a route out; say which one
+// rather than sending everyone to SVG. Ruida controllers take a job file that
+// already carries the layers, speeds and powers.
+export function offlineRoute() {
+  return state.device.controller === 'ruida'
+    ? 'This machine runs from a job file — use File → Export Ruida .rd, then load it on the machine.'
+    : 'This machine can\'t be driven directly from Crafter Studio — export SVG and open it in the machine\'s own software.';
+}
+
 function requireReady() {
-  if (!directSupported()) { toast('This machine can\'t be driven directly from Crafter Studio — export SVG instead.', 'warn'); return false; }
+  if (!directSupported()) { toast(offlineRoute(), 'warn'); return false; }
   if (!machine.connected) { toast('Connect to the machine first (Machine tab → Connect).', 'warn'); return false; }
   if (machine.job) { toast('A job is already running.', 'warn'); return false; }
   return true;

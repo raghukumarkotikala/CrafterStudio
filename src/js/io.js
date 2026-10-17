@@ -436,7 +436,9 @@ export async function saveProject(saveAs = false) {
 export async function exportGcode() {
   const ctl = state.device.controller;
   if (['ruida', 'trocen', 'topwisdom', 'm2nano', 'ezcad', 'proprietary'].includes(ctl)) {
-    toast('This machine does not accept G-code. Export SVG and open it in the machine\'s own software.', 'err');
+    toast(ctl === 'ruida'
+      ? 'This machine does not accept G-code. Use File → Export Ruida .rd instead — the layers, speeds and powers come with it.'
+      : 'This machine does not accept G-code. Export SVG and open it in the machine\'s own software.', 'err');
     return;
   }
   const job = await buildJob();

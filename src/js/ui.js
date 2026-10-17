@@ -12,6 +12,8 @@ import { DITHERS, DEFAULT_ADJ } from './imageproc.js';
 import { CONTROLLERS } from './profiles.js';
 import { machine } from './machine.js';
 import { consoleLog, log, directSupported } from './jobs.js';
+import * as vars from './variables.js';
+import * as camui from './cameraui.js';
 import { formatDuration } from './gcode.js';
 import * as pv from './preview.js';
 import { renderLibraryTab } from './library.js';
@@ -39,6 +41,8 @@ export function initUI() {
   bus.on('device', () => { buildTopbar(); if (activeTab === 'machine' || activeTab === 'layers') renderTab(); });
   bus.on('cursor', updateCursor);
   bus.on('measure', updateMeasure);
+  bus.on('variables', updateVars);
+  bus.on('camera', updateCamera);
   bus.on('view', updateZoom);
   bus.on('prefs', renderStatus);
   bus.on('toast', (m, k) => toast(m, k));
@@ -246,7 +250,18 @@ function renderLayersTab(body) {
   const shown = state.layers.filter(l => used.has(l.id) || l.id === state.activeLayer).sort((a, b) => a.order - b.order);
   const list = h('div', { class: 'layer-list' });
   for (const L of shown) {
-    const summary = L.mode === 'line' ? `${L.power}% · ${L.speed} mm/min · ${L.passes}×` : `${L.power}% · ${L.speed} mm/min · ${L.interval} mm`;
+    // Kerf, tabs and offset fill all change what comes off the machine, so a
+    // layer carrying them must not look identical to one that is not.
+    const extras = [];
+    if (L.mode === 'line') {
+      if (+L.kerf) extras.push(`kerf ${L.kerf} mm`);
+      if (+L.tabCount) extras.push(`${L.tabCount} tab${L.tabCount === 1 ? '' : 's'}`);
+    } else {
+      if (L.fillStyle === 'offset') extras.push('offset fill');
+      if (L.fillIndividually) extras.push('per shape');
+    }
+    const base = L.mode === 'line' ? `${L.power}% · ${L.speed} mm/min · ${L.passes}×` : `${L.power}% · ${L.speed} mm/min · ${L.interval} mm`;
+    const summary = base + (extras.length ? ' · ' + extras.join(' · ') : '');
     const rowEl = h('div', { class: 'layer-row' + (L.id === state.activeLayer ? ' active' : ''), onClick: () => { state.activeLayer = L.id; renderPalette(); renderTab(); } },
       h('div', { class: 'sw', style: { background: L.color } }),
       h('div', { class: 'ln' }, L.name, h('small', {}, used.has(L.id) ? summary : 'empty · click a colour below to assign')),
@@ -655,6 +670,8 @@ function renderStatus() {
     h('span', {}, 'Machine: ', h('b', { id: 'st-machine' }, machine.connected ? machine.status.state : 'Offline')),
     h('span', { class: 'toggle' + (state.prefs.snap ? ' on' : ''), title: 'Snap to grid (%)', onClick: () => run('view.snap') }, `Snap ${state.prefs.snapStep} mm`),
     h('span', { id: 'st-measure', hidden: true, style: { color: 'var(--warn)' } }),
+    h('span', { id: 'st-vars', class: 'toggle', hidden: true, title: 'Variable text — click to open', onClick: () => run('obj.variableText') }),
+    h('span', { id: 'st-camera', class: 'toggle on', hidden: true, title: 'Camera overlay is on — click to turn it off', onClick: () => run('view.camera') }, 'Camera'),
     h('span', { id: 'st-cursor' }, 'X — Y —'),
     h('span', { id: 'st-zoom' }, ''));
   updateZoom();
@@ -666,6 +683,23 @@ function updateMeasure(st) {
   if (!st) { el.textContent = ''; el.hidden = true; return; }
   el.hidden = false;
   el.textContent = `${fmtNum(st.dist, 2)} mm  ·  Δ ${fmtNum(st.dx, 2)}, ${fmtNum(st.dy, 2)}  ·  ${fmtNum(st.deg, 1)}°`;
+}
+
+// Merge data changes what every piece of variable text says, and the row is
+// otherwise invisible once the dialog is closed — which is how you engrave
+// Bob's tag believing you are still on Alice's.
+function updateVars() {
+  const el = document.getElementById('st-vars');
+  if (!el) return;
+  const st = vars.mergeState();
+  if (!st.rows.length) { el.hidden = true; el.textContent = ''; return; }
+  el.hidden = false;
+  el.textContent = `${st.fileName || 'CSV'} \u00b7 row ${st.index + 1} of ${st.rows.length}`;
+}
+
+function updateCamera() {
+  const el = document.getElementById('st-camera');
+  if (el) el.hidden = !camui.cameraOverlayOn();
 }
 
 function updateCursor(p) {

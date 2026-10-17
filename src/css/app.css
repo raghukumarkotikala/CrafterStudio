@@ -141,7 +141,7 @@ input[type=checkbox] { accent-color: var(--accent); width: 15px; height: 15px; }
 .layer-row.active { background: #23324a; box-shadow: inset 3px 0 0 var(--accent); }
 .layer-row .sw { width: 16px; height: 16px; border-radius: 4px; border: 1px solid rgba(255,255,255,.25); }
 .layer-row .ln { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.layer-row .ln small { color: var(--muted); display: block; font-size: 11px; }
+.layer-row .ln small { color: var(--muted); display: block; font-size: 11px; white-space: normal; line-height: 1.4; }
 .badge { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 10px; background: var(--panel-3); color: var(--muted); text-transform: uppercase; }
 .badge.line { background: #2d3b58; color: #9cc0ff; }
 .badge.fill { background: #3f3322; color: #ffc97a; }
