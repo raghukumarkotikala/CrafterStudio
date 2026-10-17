@@ -270,6 +270,20 @@
 <p>Only closed shapes get tabs — an open line has nothing to fall out of. If a shape is so small that the bridges would leave less than half its outline actually cut, it is cut normally instead and the job warns you, rather than producing a part that never comes free.</p>
 <p>With several passes, every pass leaves the same bridges in the same places, so a later pass cannot cut through an earlier one's tab.</p>
 
+<h4>Dashed lines: perforations, folds and score marks</h4>
+<p>Set <b>Line style</b> to <b>Dashed</b> on a Line layer and the beam cuts for a set distance, skips a set distance, and repeats all the way round. <b>Dash</b> is how far it cuts, <b>Gap</b> how far it skips.</p>
+<p>What that is for:</p>
+<ul>
+<li><b>Perforations</b> — a tear-off line in card, or a panel meant to be snapped out by hand.</li>
+<li><b>Fold lines</b> — a line of shallow cuts lets thick card or thin ply bend cleanly instead of cracking. Put the fold on its own layer at low power and high speed; the cut outline stays solid on another.</li>
+<li><b>Stitch marks</b> in leather, where a short dash at a regular pitch gives you the holes to sew through.</li>
+</ul>
+<p>For a row of <b>dots</b> rather than dashes, set the cut length very short — around 0.1 mm. At normal cutting speeds that is a few milliseconds of travel, which marks a point without the head stopping.</p>
+<p>Corners are kept: a dash that spans one still turns it, rather than cutting the corner off in a straight line.</p>
+<p>Dashing applies to <b>open paths as well as closed ones</b> — a fold line is usually just a line — which is what separates it from tabs and leads.</p>
+<p>It combines with the rest rather than replacing it: dashes are cut from whatever the tabs left, and a shape still gets one lead in and one lead out for the whole outline rather than one per dash.</p>
+<p>Settings that would produce nothing sensible are ignored and the line is cut solid — a zero gap, a zero dash, or a dash and gap that together are longer than the path itself.</p>
+
 <h4>Lead in and lead out: keeping the edge clean</h4>
 <p>Where the beam first pierces the material it dwells a moment longer than anywhere else, and leaves a mark — a wider notch, a scorch, a blob of melted acrylic. If the cut starts on the outline of your part, that mark is on the finished edge.</p>
 <p>A <b>lead</b> moves it off the part. The cut begins out in the waste, travels in to meet the outline, goes round, and on a <b>lead out</b> runs back off into the waste again. The blemish ends up on the offcut.</p>

@@ -148,6 +148,49 @@ export function splitForTabs(pts, closed, tabs) {
   return runs.length ? runs : [pts];
 }
 
+// ---------------------------------------------------------------- dashes
+/**
+ * Break a path into alternating cut and skip lengths: perforations, fold
+ * lines, score marks, stitch holes in leather.
+ *
+ * Returns the runs that are cut. Unlike tabs, this applies to open paths too —
+ * a dashed fold line is one of the main reasons to want it.
+ */
+export function dashRuns(pts, onLen, offLen) {
+  const on = +onLen || 0, off = +offLen || 0;
+  if (on <= 0 || off <= 0 || pts.length < 2) return [pts];
+
+  const segLens = [];
+  let total = 0;
+  for (let i = 1; i < pts.length; i++) {
+    const d = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+    segLens.push(d);
+    total += d;
+  }
+  // A period longer than the path would leave a single dash and no gap, which
+  // is just the solid line the user already had.
+  if (total <= 0 || on + off >= total) return [pts];
+
+  const runs = [];
+  const period = on + off;
+  for (let start = 0; start < total - 1e-9; start += period) {
+    const end = Math.min(start + on, total);
+    if (end - start < 1e-9) continue;
+    const run = [pointAtLength(pts, segLens, start)];
+    // Keep every original vertex inside the dash, so a dash across a corner
+    // still turns the corner instead of cutting it off.
+    let acc = 0;
+    for (let i = 0; i < segLens.length; i++) {
+      const vEnd = acc + segLens[i];
+      if (vEnd > start && vEnd < end) run.push(pts[i + 1].slice());
+      acc = vEnd;
+    }
+    run.push(pointAtLength(pts, segLens, end));
+    if (run.length > 1) runs.push(run);
+  }
+  return runs.length ? runs : [pts];
+}
+
 // ---------------------------------------------------------------- lead in/out
 /**
  * A lead is a short cutting move that starts out in the waste and arrives at
@@ -300,7 +343,12 @@ function planLines(polys, s, buf, cur, layerIdx) {
     for (const entry of order) {
       // Tabs are applied per pass, so every pass leaves the same bridges
       // rather than a later pass cutting through an earlier one's tab.
-      const runs = splitForTabs(entry.pts, entry.closed, entry.tabs);
+      const tabRuns = splitForTabs(entry.pts, entry.closed, entry.tabs);
+      // Dashes are cut from whatever the tabs left, so the two combine rather
+      // than one overriding the other.
+      const runs = s.lineStyle === 'dash'
+        ? tabRuns.flatMap(r => dashRuns(r, s.dashLength, s.dashGap))
+        : tabRuns;
       // Leads belong to the shape, not to each tabbed run: one in at the very
       // start, one out at the very end. Only closed shapes get them — an open
       // path has no finished edge to protect, and a lead would just extend the
@@ -547,6 +595,9 @@ function effective(layer, item) {
   s.leadOut = Math.max(0, +s.leadOut || 0);
   s.leadAngle = Math.max(5, Math.min(175, +s.leadAngle || 45));
   s.leadStyle = s.leadStyle === 'arc' ? 'arc' : 'line';
+  s.lineStyle = s.lineStyle === 'dash' ? 'dash' : 'solid';
+  s.dashLength = Math.max(0, +s.dashLength || 0);
+  s.dashGap = Math.max(0, +s.dashGap || 0);
   return s;
 }
 

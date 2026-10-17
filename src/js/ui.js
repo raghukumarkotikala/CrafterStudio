@@ -257,6 +257,7 @@ function renderLayersTab(body) {
       if (+L.kerf) extras.push(`kerf ${L.kerf} mm`);
       if (+L.tabCount) extras.push(`${L.tabCount} tab${L.tabCount === 1 ? '' : 's'}`);
       if (+L.leadIn || +L.leadOut) extras.push(`lead ${+L.leadIn || 0}/${+L.leadOut || 0} mm`);
+      if (L.lineStyle === 'dash') extras.push(`dashed ${+L.dashLength || 0}/${+L.dashGap || 0}`);
     } else {
       if (L.fillStyle === 'offset') extras.push('offset fill');
       if (L.fillIndividually) extras.push('per shape');
@@ -312,6 +313,17 @@ function renderLayersTab(body) {
     L.mode === 'line' && (+L.kerf || 0) !== 0
       ? h('div', { class: 'small muted', style: { margin: '-2px 0 8px' } },
         `Cut path moves ${Math.abs(L.kerf / 2).toFixed(3)} mm ${L.kerf > 0 ? 'outward on outlines, inward on holes' : 'inward on outlines, outward on holes'}. The drawing itself is not changed.`)
+      : null,
+    L.mode === 'line' ? row('Line style', seg({ solid: 'Solid', dash: 'Dashed' }, L.lineStyle || 'solid', v => { L.lineStyle = v; layerChanged(); })) : null,
+    L.mode === 'line' && L.lineStyle === 'dash'
+      ? row('Dash', num(L.dashLength ?? 2, v => { L.dashLength = Math.max(0.05, v); layerChanged(); }, { min: 0.05, max: 100, step: 0.1, unit: 'mm cut' }))
+      : null,
+    L.mode === 'line' && L.lineStyle === 'dash'
+      ? row('Gap', num(L.dashGap ?? 1, v => { L.dashGap = Math.max(0.05, v); layerChanged(); }, { min: 0.05, max: 100, step: 0.1, unit: 'mm skipped' }))
+      : null,
+    L.mode === 'line' && L.lineStyle === 'dash'
+      ? h('div', { class: 'small muted', style: { margin: '-2px 0 8px' } },
+        `Cuts ${(+L.dashLength || 2).toFixed(2)} mm, skips ${(+L.dashGap || 1).toFixed(2)} mm, all the way round — perforations, fold lines, stitch marks. For a row of dots rather than dashes, set the cut length very short, around 0.1 mm.`)
       : null,
     L.mode === 'line' ? row('Lead in', num(L.leadIn || 0, v => { L.leadIn = Math.max(0, v); layerChanged(); }, { min: 0, max: 50, step: 0.5, unit: 'mm' })) : null,
     L.mode === 'line' ? row('Lead out', num(L.leadOut || 0, v => { L.leadOut = Math.max(0, v); layerChanged(); }, { min: 0, max: 50, step: 0.5, unit: 'mm' })) : null,
