@@ -256,6 +256,7 @@ function renderLayersTab(body) {
     if (L.mode === 'line') {
       if (+L.kerf) extras.push(`kerf ${L.kerf} mm`);
       if (+L.tabCount) extras.push(`${L.tabCount} tab${L.tabCount === 1 ? '' : 's'}`);
+      if (+L.leadIn || +L.leadOut) extras.push(`lead ${+L.leadIn || 0}/${+L.leadOut || 0} mm`);
     } else {
       if (L.fillStyle === 'offset') extras.push('offset fill');
       if (L.fillIndividually) extras.push('per shape');
@@ -311,6 +312,18 @@ function renderLayersTab(body) {
     L.mode === 'line' && (+L.kerf || 0) !== 0
       ? h('div', { class: 'small muted', style: { margin: '-2px 0 8px' } },
         `Cut path moves ${Math.abs(L.kerf / 2).toFixed(3)} mm ${L.kerf > 0 ? 'outward on outlines, inward on holes' : 'inward on outlines, outward on holes'}. The drawing itself is not changed.`)
+      : null,
+    L.mode === 'line' ? row('Lead in', num(L.leadIn || 0, v => { L.leadIn = Math.max(0, v); layerChanged(); }, { min: 0, max: 50, step: 0.5, unit: 'mm' })) : null,
+    L.mode === 'line' ? row('Lead out', num(L.leadOut || 0, v => { L.leadOut = Math.max(0, v); layerChanged(); }, { min: 0, max: 50, step: 0.5, unit: 'mm' })) : null,
+    L.mode === 'line' && ((+L.leadIn || 0) > 0 || (+L.leadOut || 0) > 0)
+      ? row('Lead shape', seg({ line: 'Straight', arc: 'Arc' }, L.leadStyle || 'line', v => { L.leadStyle = v; layerChanged(); }))
+      : null,
+    L.mode === 'line' && ((+L.leadIn || 0) > 0 || (+L.leadOut || 0) > 0) && (L.leadStyle || 'line') === 'line'
+      ? row('Lead angle', ...num(L.leadAngle ?? 45, v => { L.leadAngle = v; layerChanged(); }, { min: 5, max: 175, step: 5, unit: '°' }))
+      : null,
+    L.mode === 'line' && ((+L.leadIn || 0) > 0 || (+L.leadOut || 0) > 0)
+      ? h('div', { class: 'small muted', style: { margin: '-2px 0 8px' } },
+        'The cut starts and stops out in the waste, so the mark where the beam pierces is not on the finished edge. Closed shapes only; the side is chosen automatically — outside an outline, inside a hole.')
       : null,
     row('Air assist', check(L.air, v => { L.air = v; layerChanged(); }, state.device.airAssist ? 'M8 on for this layer' : 'M8 on (disabled in machine profile)')),
     row('Output', check(L.output, v => { L.output = v; layerChanged(); }, 'Include in job')),

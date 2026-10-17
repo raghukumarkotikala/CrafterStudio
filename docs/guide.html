@@ -100,6 +100,9 @@
     padding:16px 18px; color:var(--muted); font-size:14.5px}
   .note.warn{border-color:#6a5220; background:#2b2518; color:#f3c877}
   .note.warn b{color:#ffd98a}
+  .card p.small{font-size:13px; color:var(--dim); margin-top:10px}
+  .card code{background:var(--panel-2); border:1px solid var(--line); border-radius:5px;
+    padding:1px 5px; font-size:12.5px; white-space:nowrap}
 
   /* ---------- footer ---------- */
   footer{border-top:1px solid var(--line); padding:34px 0 46px; color:var(--dim); font-size:13.5px}
@@ -266,6 +269,20 @@
 <p>On a Line layer, set <b>Tabs</b> to the number of bridges per shape and <b>Tab size</b> to how long each one is. Four tabs of 0.5 mm suits small plywood parts; heavier material or bigger pieces want more, or longer. They are spaced evenly around each closed shape, positioned so one never lands on the start point.</p>
 <p>Only closed shapes get tabs — an open line has nothing to fall out of. If a shape is so small that the bridges would leave less than half its outline actually cut, it is cut normally instead and the job warns you, rather than producing a part that never comes free.</p>
 <p>With several passes, every pass leaves the same bridges in the same places, so a later pass cannot cut through an earlier one's tab.</p>
+
+<h4>Lead in and lead out: keeping the edge clean</h4>
+<p>Where the beam first pierces the material it dwells a moment longer than anywhere else, and leaves a mark — a wider notch, a scorch, a blob of melted acrylic. If the cut starts on the outline of your part, that mark is on the finished edge.</p>
+<p>A <b>lead</b> moves it off the part. The cut begins out in the waste, travels in to meet the outline, goes round, and on a <b>lead out</b> runs back off into the waste again. The blemish ends up on the offcut.</p>
+<p>Set <b>Lead in</b> and <b>Lead out</b> on a Line layer. Two or three millimetres is plenty on thin material; thicker stock and slower cuts want more. Either can be used without the other — a lead in alone is the common case, since the pierce mark is the worse of the two.</p>
+<table class="tbl">
+<tr><th>Lead shape</th><th>When</th></tr>
+<tr><td><b>Straight</b></td><td>Comes in at an angle you set. Simple, short, and fine for most work. The angle is measured from the cut direction; 45° is a good default and 90° comes straight in from the side.</td></tr>
+<tr><td><b>Arc</b></td><td>Curves in and meets the outline tangentially, so the head never changes direction abruptly at the join. Kinder to thick material and fast cuts, where a sharp corner at the start can leave its own mark.</td></tr>
+</table>
+<p><b>Which side the lead goes is worked out for you.</b> On the outline of a part the waste is outside, so the lead swings outward; in a hole the waste is inside, so it swings inward. That is the same nesting rule the kerf offset uses, and it means a lead never cuts into the piece you are keeping.</p>
+<p>Leads apply to <b>closed shapes only</b>. An open line has no finished edge to protect, and a lead would simply extend the cut past where you drew it.</p>
+<p>They work with tabs: the lead in attaches to the start of the first bridge-to-bridge run and the lead out to the end of the last, so you still get one lead per shape rather than one per run.</p>
+<p>Remember the lead needs somewhere to go. A part nested hard against its neighbour has no waste to lead into — leave a few millimetres between parts, or shorten the lead.</p>
 
 <h4>Kerf: making parts actually fit</h4>
 <p>The beam removes material either side of the line it follows. Cut a 20 mm disc exactly on its outline and it comes out around 19.8 mm; cut a 20 mm hole and it comes out about 20.2 mm. That is why a peg and its socket drawn the same size do not fit.</p>

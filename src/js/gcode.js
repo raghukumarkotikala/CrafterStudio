@@ -148,6 +148,99 @@ export function splitForTabs(pts, closed, tabs) {
   return runs.length ? runs : [pts];
 }
 
+// ---------------------------------------------------------------- lead in/out
+/**
+ * A lead is a short cutting move that starts out in the waste and arrives at
+ * the shape, so that the mark the beam leaves where it first pierces is not on
+ * the finished edge. The lead-out does the same for where it stops.
+ *
+ * Which side is waste depends on what the contour is: for the outline of a
+ * part it is outside, for a hole it is inside. That is the same nesting parity
+ * the kerf offset uses, so a lead never cuts into the piece being kept.
+ */
+export function leadSegment(P, dir, waste, { length, angle = 45, style = 'line', outgoing = false }) {
+  if (!(length > 0)) return [];
+  const [tx, ty] = dir;
+  if (!isFinite(tx) || !isFinite(waste[0])) return [];
+  // Take only the part of the waste direction that is across the path. A
+  // normal is perpendicular by construction, but squaring it up here means the
+  // arc still meets the shape tangentially if it ever is not.
+  let wx = waste[0] - tx * (waste[0] * tx + waste[1] * ty);
+  let wy = waste[1] - ty * (waste[0] * tx + waste[1] * ty);
+  const wm = Math.hypot(wx, wy);
+  if (wm < 1e-9) { wx = -ty; wy = tx; } else { wx /= wm; wy /= wm; }
+
+  if (style === 'arc') {
+    // A quarter turn whose arc length is the figure the user asked for, curving
+    // away into the waste and meeting the shape tangentially.
+    const r = length / (Math.PI / 2);
+    const cx = P[0] + wx * r, cy = P[1] + wy * r;
+    const a1 = Math.atan2(P[1] - cy, P[0] - cx);
+    // Travelling anticlockwise, the velocity at P is rot90(P-C)/r. Pick the
+    // direction that arrives (or leaves) along the path's own tangent.
+    const ccw = (wy * tx - wx * ty) > 0;
+    const sweep = (Math.PI / 2) * (ccw ? 1 : -1);
+    const steps = Math.max(4, Math.ceil(length / 0.25));
+    const out = [];
+    for (let i = 0; i <= steps; i++) {
+      // Incoming runs from the far end of the arc to P; outgoing from P onward.
+      const f = outgoing ? (i / steps) : (i / steps - 1);
+      const a = a1 + sweep * f;
+      out.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]);
+    }
+    if (outgoing) out.shift(); else out.pop();      // P itself is on the path
+    return out;
+  }
+
+  // Straight lead at `angle` to the path. The sign is chosen, not asked for:
+  // whichever rotation puts the lead in the waste is the one that is wanted.
+  const th = Math.max(5, Math.min(175, angle)) * Math.PI / 180;
+  const pick = sgn => {
+    const c = Math.cos(sgn * th), sn = Math.sin(sgn * th);
+    return [tx * c - ty * sn, tx * sn + ty * c];
+  };
+  const want = outgoing ? 1 : -1;                   // sign of D·waste we need
+  let D = pick(1);
+  if ((D[0] * wx + D[1] * wy) * want <= 0) D = pick(-1);
+  if ((D[0] * wx + D[1] * wy) * want <= 0) D = [wx * want, wy * want];
+  return outgoing ? [[P[0] + D[0] * length, P[1] + D[1] * length]]
+                  : [[P[0] - D[0] * length, P[1] - D[1] * length]];
+}
+
+/** Unit travel direction at one end of a run, skipping coincident points. */
+function endDirection(pts, atEnd) {
+  const n = pts.length;
+  if (n < 2) return null;
+  if (atEnd) {
+    for (let i = n - 2; i >= 0; i--) {
+      const dx = pts[n - 1][0] - pts[i][0], dy = pts[n - 1][1] - pts[i][1];
+      const d = Math.hypot(dx, dy);
+      if (d > 1e-9) return [dx / d, dy / d];
+    }
+  } else {
+    for (let i = 1; i < n; i++) {
+      const dx = pts[i][0] - pts[0][0], dy = pts[i][1] - pts[0][1];
+      const d = Math.hypot(dx, dy);
+      if (d > 1e-9) return [dx / d, dy / d];
+    }
+  }
+  return null;
+}
+
+/**
+ * The unit normal at P pointing away from the material that is being kept.
+ * `depth` is how many closed contours enclose this one: even means an outline
+ * whose waste is outside, odd means a hole whose waste is inside.
+ */
+function wasteNormal(P, dir, ring, depth) {
+  const n = [-dir[1], dir[0]];
+  const eps = 1e-3;
+  const inside = pointInPoly(P[0] + n[0] * eps, P[1] + n[1] * eps, ring);
+  const inward = inside ? n : [-n[0], -n[1]];
+  const outward = [-inward[0], -inward[1]];
+  return depth % 2 === 0 ? outward : inward;
+}
+
 function planLines(polys, s, buf, cur, layerIdx) {
   if (!polys.length) return;
   polys.forEach(p => { p.b = polyBounds(p.pts); p.depth = 0; });
@@ -197,7 +290,7 @@ function planLines(polys, s, buf, cur, layerIdx) {
         pts.push(pts[0]);
       }
       if (bestRev) pts = pts.slice().reverse();
-      order.push({ pts, closed: p.closed, tabs: p.tabs });
+      order.push({ pts, closed: p.closed, tabs: p.tabs, depth: p.depth });
       const last = pts[pts.length - 1];
       cx = last[0]; cy = last[1];
     }
@@ -207,7 +300,31 @@ function planLines(polys, s, buf, cur, layerIdx) {
     for (const entry of order) {
       // Tabs are applied per pass, so every pass leaves the same bridges
       // rather than a later pass cutting through an earlier one's tab.
-      for (const pts of splitForTabs(entry.pts, entry.closed, entry.tabs)) {
+      const runs = splitForTabs(entry.pts, entry.closed, entry.tabs);
+      // Leads belong to the shape, not to each tabbed run: one in at the very
+      // start, one out at the very end. Only closed shapes get them — an open
+      // path has no finished edge to protect, and a lead would just extend the
+      // cut past where it was drawn.
+      const wantLead = entry.closed && (s.leadIn > 0 || s.leadOut > 0) && runs.length;
+      for (let r = 0; r < runs.length; r++) {
+        let pts = runs[r];
+        if (wantLead && r === 0 && s.leadIn > 0) {
+          const dir = endDirection(pts, false);
+          if (dir) {
+            const w = wasteNormal(pts[0], dir, entry.pts, entry.depth || 0);
+            const lead = leadSegment(pts[0], dir, w, { length: s.leadIn, angle: s.leadAngle, style: s.leadStyle });
+            if (lead.length) pts = lead.concat(pts);
+          }
+        }
+        if (wantLead && r === runs.length - 1 && s.leadOut > 0) {
+          const dir = endDirection(pts, true);
+          if (dir) {
+            const end = pts[pts.length - 1];
+            const w = wasteNormal(end, dir, entry.pts, entry.depth || 0);
+            const lead = leadSegment(end, dir, w, { length: s.leadOut, angle: s.leadAngle, style: s.leadStyle, outgoing: true });
+            if (lead.length) pts = pts.concat(lead);
+          }
+        }
         buf.push(K_RAPID, pts[0][0], pts[0][1], 0, 0, layerIdx);
         for (let i = 1; i < pts.length; i++) buf.push(K_FEED, pts[i][0], pts[i][1], power, s.speed, layerIdx);
       }
@@ -426,6 +543,10 @@ function effective(layer, item) {
   s.passes = Math.max(1, Math.round(s.passes || 1));
   s.speed = Math.max(1, +s.speed || 1000);
   s.power = Math.min(100, Math.max(0, +s.power || 0));
+  s.leadIn = Math.max(0, +s.leadIn || 0);
+  s.leadOut = Math.max(0, +s.leadOut || 0);
+  s.leadAngle = Math.max(5, Math.min(175, +s.leadAngle || 45));
+  s.leadStyle = s.leadStyle === 'arc' ? 'arc' : 'line';
   return s;
 }
 
@@ -624,7 +745,7 @@ export async function buildJob({ onlySelection = false } = {}) {
 
   // Bounds and statistics
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-  let burnDist = 0, travelDist = 0, time = 0, px = 0, py = 0;
+  let burnDist = 0, travelDist = 0, time = 0, px = 0, py = 0, hasPrev = false;
   const rapid = state.device.rapid || 6000;
   const a = buf.a;
   for (let i = 0; i < buf.n; i++) {
@@ -639,8 +760,14 @@ export async function buildJob({ onlySelection = false } = {}) {
     if (a[i * 6 + 3] > 0 || k === K_FEED) {
       if (x < x0) x0 = x; if (x > x1) x1 = x;
       if (y < y0) y0 = y; if (y > y1) y1 = y;
+      // The point a cut starts from arrives as a rapid, so without this the
+      // first vertex of every open path is missing from the extent.
+      if (hasPrev) {
+        if (px < x0) x0 = px; if (px > x1) x1 = px;
+        if (py < y0) y0 = py; if (py > y1) y1 = py;
+      }
     }
-    px = x; py = y;
+    px = x; py = y; hasPrev = true;
   }
   const W = state.device.workW, H = state.device.workH;
   const hasMoves = x0 !== Infinity;
