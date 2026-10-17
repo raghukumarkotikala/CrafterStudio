@@ -536,6 +536,139 @@ export function joinPaths(tolerance = 0.1) {
 }
 
 /** Force closed regardless of gap size — for contours that must be fillable. */
+/**
+ * A signature that is the same for two paths lying on top of each other,
+ * whichever way round each was drawn. Sampling at a fixed count rather than
+ * comparing segments means a curve and the same curve with extra nodes still
+ * match, which is what a re-import usually produces.
+ */
+function pathSignature(p, tol) {
+  const N = 24;
+  const len = p.length;
+  if (!(len > 0)) {
+    const q = p.firstSegment && p.firstSegment.point;
+    return q ? `pt:${Math.round(q.x / tol)},${Math.round(q.y / tol)}` : 'empty';
+  }
+  const key = q => `${Math.round(q.x / tol)},${Math.round(q.y / tol)}`;
+  const fwd = [];
+  for (let i = 0; i < N; i++) {
+    const q = p.getPointAt((i / N) * len);
+    if (!q) return null;
+    fwd.push(key(q));
+  }
+  // An open path's far end is a real, distinct point; a closed one's would
+  // just repeat the start.
+  if (!p.closed) {
+    const last = p.getPointAt(len);
+    if (!last) return null;
+    fwd.push(key(last));
+  }
+  // Length is deliberately not part of this. A re-imported copy of a curve
+  // carries more nodes and so measures fractionally shorter, and including it
+  // would stop exactly the duplicate this is meant to catch from matching.
+  const canon = arr => {
+    if (!p.closed) return arr.join(' ');
+    // A ring can start anywhere on itself, so rotate to a fixed point first.
+    let bi = 0;
+    for (let i = 1; i < arr.length; i++) if (arr[i] < arr[bi]) bi = i;
+    return arr.slice(bi).concat(arr.slice(0, bi)).join(' ');
+  };
+  const f = canon(fwd), r = canon(fwd.slice().reverse());
+  // Direction must not matter, so the smaller spelling is the canonical one.
+  return (f < r ? f : r) + `|${p.closed ? 'c' : 'o'}`;
+}
+
+/**
+ * Delete paths that lie on top of an identical one. A doubled line is cut
+ * twice: slower, and it over-burns the edge because the second pass lands in
+ * the char of the first.
+ *
+ * This removes whole duplicated paths. It does not split a single edge shared
+ * between two different shapes — that needs surgery on the geometry and would
+ * turn curves into polylines, which costs more than it saves.
+ */
+export function removeDuplicates(tolerance = 0.05) {
+  const items = sel();
+  if (!items.length) return toast('Select something first.');
+  const tol = Math.max(0.001, tolerance);
+  const paths = pathsIn(items);
+  if (paths.length < 2) return toast('Select at least two objects to compare.');
+
+  const seen = new Map();
+  const doomed = [];
+  for (const p of paths) {
+    if (!p.parent) continue;
+    let sig;
+    try { sig = pathSignature(p, tol); } catch { sig = null; }
+    if (!sig) continue;
+    if (seen.has(sig)) doomed.push(p);
+    else seen.set(sig, p);
+  }
+  if (!doomed.length) return toast('No duplicates found — nothing was on top of anything else.');
+
+  // A path inside a compound shape cannot simply be removed: taking the last
+  // child away would leave an empty husk behind.
+  let removed = 0;
+  for (const p of doomed) {
+    const parent = p.parent;
+    p.remove();
+    removed++;
+    if (parent && parent.className === 'CompoundPath' && !parent.children.length) parent.remove();
+  }
+  clearSelection();
+  pushHistory();
+  bus.emit('changed');
+  toast(`Removed ${removed} duplicate path${removed === 1 ? '' : 's'}.`);
+  return removed;
+}
+
+/**
+ * Look over the drawing for the things that spoil a job, and report them
+ * rather than silently fixing them: which to act on depends on what the file
+ * is for, and a fix applied to the wrong one is worse than the problem.
+ */
+export function dataCheck({ onlySelection = false } = {}) {
+  const scope = onlySelection && state.selection.length ? sel() : ed.design.children.slice();
+  const paths = pathsIn(scope);
+  const { workW: W, workH: H } = state.device;
+
+  const open = [], tiny = [], crossing = [], outside = [], dup = [];
+  const seen = new Map();
+  for (const p of paths) {
+    if (!p.parent) continue;
+    const len = p.length;
+    if (!(len > 0.01)) { tiny.push(p); continue; }
+    if (!p.closed) open.push(p);
+    try {
+      const x = p.getCrossings(p);
+      if (x && x.length) crossing.push(p);
+    } catch { /* paper can refuse on degenerate paths; not a finding */ }
+    const b = p.bounds;
+    if (b.left < -0.01 || b.top < -0.01 || b.right > W + 0.01 || b.bottom > H + 0.01) outside.push(p);
+    let sig = null;
+    try { sig = pathSignature(p, 0.05); } catch { sig = null; }
+    if (sig) {
+      if (seen.has(sig)) dup.push(p);
+      else seen.set(sig, p);
+    }
+  }
+  return {
+    total: paths.length,
+    findings: [
+      { key: 'open', label: 'Open contours', items: open,
+        note: 'Will outline but not fill. Object → Join Open Paths usually closes them.' },
+      { key: 'dup', label: 'Duplicates lying on top of each other', items: dup,
+        note: 'Cut twice: slower, and the second pass burns into the char of the first.' },
+      { key: 'crossing', label: 'Paths that cross themselves', items: crossing,
+        note: 'A fill reads the inside of these as holes, so parts of the shape come out empty.' },
+      { key: 'outside', label: 'Outside the work area', items: outside,
+        note: `The bed is ${W} × ${H} mm. Anything past it will not be cut where you expect.` },
+      { key: 'tiny', label: 'Zero-length leftovers', items: tiny,
+        note: 'Stray points that fire the laser without cutting anything.' }
+    ].filter(f => f.items.length)
+  };
+}
+
 export function closePaths() {
   const items = sel();
   if (!items.length) return toast('Select something first.');

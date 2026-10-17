@@ -114,6 +114,8 @@ function buildMenu() {
         item('Simplify Paths…', 'obj.simplify'),
         item('Join Open Paths…', 'obj.join'),
         item('Close Paths', 'obj.close'),
+        item('Remove Duplicate Paths…', 'obj.dedupe'),
+        item('Check the Drawing…', 'obj.check', 'F7'),
         { type: 'separator' },
         item('Insert 2D Code…', 'obj.code'),
         item('Variable Text…', 'obj.variableText'),

@@ -89,6 +89,8 @@ export const cmds = {
   'obj.textPath': dlg.openTextOnPathDialog,
   'obj.simplify': dlg.openSimplifyDialog,
   'obj.join': dlg.openJoinDialog,
+  'obj.dedupe': dlg.openDuplicatesDialog,
+  'obj.check': dlg.openDataCheckDialog,
   'obj.close': ops.closePaths,
   'obj.code': dlg.openCodeDialog,
   'obj.envelope': () => setTool('envelope'),

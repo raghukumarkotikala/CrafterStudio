@@ -677,6 +677,46 @@ export function openSimplifyDialog() {
   ], v => ops.simplifyPaths(v.t));
 }
 
+export function openDuplicatesDialog() {
+  if (!state.selection.length) { toast('Select something first.'); return; }
+  paramDialog('Remove duplicate paths', [
+    { key: 't', label: 'Tolerance', value: 0.05, min: 0.001, max: 2, step: 0.01, unit: 'mm' }
+  ], v => ops.removeDuplicates(v.t));
+}
+
+/**
+ * Reports rather than fixes. Each finding can be selected on the canvas, so
+ * the user decides what to do about it with the tools that already exist.
+ */
+export function openDataCheckDialog() {
+  const scoped = state.selection.length > 0;
+  const r = ops.dataCheck({ onlySelection: scoped });
+  const body = h('div', { style: { width: '520px' } });
+
+  if (!r.total) {
+    appendAll(body, h('div', { class: 'note' }, 'Nothing to check — the drawing is empty.'));
+  } else if (!r.findings.length) {
+    appendAll(body,
+      h('div', { class: 'note' }, `Checked ${r.total} path${r.total === 1 ? '' : 's'}${scoped ? ' in the selection' : ''}. Nothing to report.`),
+      h('div', { class: 'small muted' }, 'Closed contours, nothing doubled up, nothing crossing itself, everything on the bed.'));
+  } else {
+    appendAll(body,
+      h('div', { class: 'note' }, `Checked ${r.total} path${r.total === 1 ? '' : 's'}${scoped ? ' in the selection' : ''}.`),
+      h('table', { class: 'tbl' },
+        h('tr', {}, h('th', {}, 'What'), h('th', {}, 'How many'), h('th', {}, '')),
+        ...r.findings.map(f => h('tr', {},
+          h('td', {}, h('b', {}, f.label), h('small', { class: 'muted', style: { display: 'block' } }, f.note)),
+          h('td', {}, String(f.items.length)),
+          h('td', {}, h('button', { class: 'btn small', onClick: () => {
+            selectItems(f.items.filter(i => i.parent));
+            toast(`Selected ${f.items.length} · ${f.label.toLowerCase()}`);
+          } }, 'Select'))))),
+      h('div', { class: 'note warn' }, 'Nothing here has been changed. Pick a row, see what it caught, and fix it with the tool that suits.'));
+  }
+
+  openModal({ title: 'Check the drawing', body, width: '580px', buttons: [{ label: 'Close', primary: true }] });
+}
+
 export function openJoinDialog() {
   if (!state.selection.length) { toast('Select something first.'); return; }
   paramDialog('Join open paths', [
@@ -827,6 +867,7 @@ export function openShortcuts() {
     ['Arrows', 'Nudge 1 mm (Shift 10 mm, Alt 0.1 mm)'], ['Shift while dragging', 'Constrain / keep proportions off'],
     ['Alt + drag', 'Duplicate while moving'], ['Double-click', 'Edit text / nodes'], ['Home / End / PgUp / PgDn', 'Arrange'],
     ['Alt+P', 'Toolpath preview'], ['Alt+C', 'Camera overlay on / off'], ['Alt+Shift+C', 'Take a new camera picture'],
+    ['F7', 'Check the drawing'],
     ['F5', 'Start job'], ['%', 'Toggle snap to grid']
   ];
   openModal({

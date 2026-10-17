@@ -130,6 +130,23 @@ export const TOPICS = [
 <li><b>Object → Close Paths</b> forces the selection closed regardless of gap size, for when you know the contour is meant to be solid.</li>
 </ul>
 
+<h4>Checking a file before you cut it</h4>
+<p><i>Object → Check the Drawing</i> (<kbd>F7</kbd>) looks over the whole design — or just the selection, if there is one — and reports what tends to spoil a job. It <b>changes nothing</b>. Each finding has a <b>Select</b> button that picks those objects on the canvas so you can see what it caught and decide.</p>
+<table class="tbl">
+<tr><th>What it reports</th><th>Why it matters</th></tr>
+<tr><td><b>Open contours</b></td><td>They outline but will not fill. <i>Join Open Paths</i> usually closes them.</td></tr>
+<tr><td><b>Duplicates on top of each other</b></td><td>Cut twice: slower, and the second pass burns into the char left by the first.</td></tr>
+<tr><td><b>Paths that cross themselves</b></td><td>A fill reads the enclosed loops as holes, so parts of the shape come out empty.</td></tr>
+<tr><td><b>Outside the work area</b></td><td>Anything past the bed will not be cut where you expect it.</td></tr>
+<tr><td><b>Zero-length leftovers</b></td><td>Stray points that fire the laser without cutting anything.</td></tr>
+</table>
+<p>Worth running on anything that arrived as a DXF, and on anything you are about to cut a lot of.</p>
+
+<h4>Removing duplicates</h4>
+<p><i>Object → Remove Duplicate Paths</i> deletes paths that lie on top of an identical one. DXF exports often carry every line twice, and a doubled line is cut twice — slower, and the second pass lands in the burnt edge of the first.</p>
+<p>A path counts as a duplicate however it was drawn: backwards, starting at a different point around a ring, or carrying more nodes than the original after a re-import. The <b>tolerance</b> is how far apart two paths may sit and still count as the same; 0.05 mm suits most work. Shapes that genuinely differ by more than that are left alone, so a coarse polygon approximating a circle is not mistaken for it.</p>
+<p>One limit worth knowing: this removes whole duplicated paths. It does not split a single edge <i>shared</i> between two different shapes — that would mean rebuilding the geometry and turning curves into straight segments, which costs more than the double cut it saves. For shared edges, delete one of the two shapes and rely on the other's edge.</p>
+
 <h4>QR codes and 2D codes</h4>
 <p><i>Object → Insert 2D Code</i> generates <b>QR Code</b>, <b>Data Matrix</b>, <b>GS1 Data Matrix</b>, <b>Aztec</b> and <b>Micro QR</b> as real vector geometry — not a pasted image — so they engrave crisply at any size.</p>
 <p>The dialog previews the code as you type and reports the <b>module size</b>, which is the figure that decides whether it will scan. Below about 0.35 mm per module a diode spot bridges neighbouring modules and the code stops reading; you are warned when that happens. Either enlarge the code or shorten the content — a shorter URL needs fewer modules, so it reads at a smaller size.</p>
