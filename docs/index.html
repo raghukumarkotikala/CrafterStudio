@@ -209,7 +209,7 @@
 
       <div class="card">
         <h3><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Smart G-code</h3>
-        <p>GRBL, grblHAL/FluidNC, Marlin and Smoothieware. Cuts inner shapes before outer, shortens travel, estimates job time, previews the toolpath and drives a rotary axis. Ruida CO₂ machines can export a planned <b>.rd job file</b> with layers, speeds and powers already set.</p>
+        <p>GRBL, grblHAL/FluidNC, Marlin and Smoothieware. Cuts inner shapes before outer, shortens travel, estimates job time, previews the toolpath and drives a rotary axis — and when you want it done your way, any object can carry its own <b>cut order, start corner and direction</b>. Ruida CO₂ machines can export a planned <b>.rd job file</b> with layers, speeds and powers already set.</p>
       </div>
 
       <div class="card">
@@ -219,7 +219,7 @@
 
       <div class="card">
         <h3><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5a1 1 0 0 1 1-1h4"/><path d="M15 4h4a1 1 0 0 1 1 1v4"/><path d="M20 15v4a1 1 0 0 1-1 1h-4"/><path d="M9 20H5a1 1 0 0 1-1-1v-4"/><path d="M8 12h8"/></svg>Parts that actually fit</h3>
-        <p><b>Kerf</b> compensation moves the cut by half the width your beam removes — outward on outlines, inward on holes — so a 20 mm disc comes out 20 mm instead of 19.8, and a peg fits its socket. <b>Tabs</b> leave small bridges that hold each piece in the sheet until you snap it out, instead of letting it drop into the machine.</p>
+        <p><b>Kerf</b> compensation moves the cut by half the width your beam removes — outward on outlines, inward on holes — so a 20 mm disc comes out 20 mm instead of 19.8, and a peg fits its socket. <b>Tabs</b> leave small bridges that hold each piece in the sheet until you snap it out, instead of letting it drop into the machine. <b>Lead in and out</b> start and finish the cut in the waste, so the mark where the beam pierces never lands on the finished edge — and which side is waste is worked out for you.</p>
       </div>
 
       <div class="card">
@@ -235,6 +235,16 @@
       <div class="card">
         <h3><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="12.5" r="3.5"/></svg>See the real material</h3>
         <p>Point a camera at the bed and your design sits on top of what is actually there, so a badge lands on the offcut rather than on a guess. Lens bowing and the viewing angle are both corrected from four points you mark. A guide, not a measurement — frame the job before you cut.</p>
+      </div>
+
+      <div class="card">
+        <h3><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15h18"/><path d="M3 9h3M9 9h3M15 9h3M20 9h1"/><path d="M6 19l3-3M15 19l3-3"/></svg>Score, fold and perforate</h3>
+        <p>A <b>dashed</b> line cuts a set distance and skips a set distance, all the way round. Tear-off perforations, fold lines that let thick card bend instead of crack, stitch marks in leather. Works on open lines as well as closed shapes, and a very short cut length gives you a row of dots instead.</p>
+      </div>
+
+      <div class="card">
+        <h3><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>Catch it before you cut</h3>
+        <p>One keypress checks the drawing for the things that spoil a job: contours that look closed but are not, paths doubled on top of each other, shapes that cross themselves, anything off the bed. It fixes nothing — it shows you what it found and lets you choose. <b>Remove duplicates</b> clears the doubled lines a DXF export leaves behind.</p>
       </div>
 
     </div>
