@@ -148,6 +148,19 @@ export function splitForTabs(pts, closed, tabs) {
   return runs.length ? runs : [pts];
 }
 
+/**
+ * Twice the signed area of a ring. In canvas space, where y runs down the
+ * screen, a positive value means the ring is drawn clockwise as the user sees
+ * it. Used only to decide whether a contour needs reversing.
+ */
+export function signedArea(pts) {
+  let a = 0;
+  for (let i = 0; i < pts.length - 1; i++) {
+    a += pts[i][0] * pts[i + 1][1] - pts[i + 1][0] * pts[i][1];
+  }
+  return a / 2;
+}
+
 // ---------------------------------------------------------------- dashes
 /**
  * Break a path into alternating cut and skip lengths: perforations, fold
@@ -278,7 +291,13 @@ function endDirection(pts, atEnd) {
 function wasteNormal(P, dir, ring, depth) {
   const n = [-dir[1], dir[0]];
   const eps = 1e-3;
-  const inside = pointInPoly(P[0] + n[0] * eps, P[1] + n[1] * eps, ring);
+  // Probe from a little way along the path rather than from P itself. Cuts
+  // very often start on a corner, and there the sideways step lands exactly on
+  // the adjoining edge, where "inside or out" has no answer — which put the
+  // lead along the edge instead of out in the waste.
+  const step = 0.01;
+  const q = [P[0] + dir[0] * step, P[1] + dir[1] * step];
+  const inside = pointInPoly(q[0] + n[0] * eps, q[1] + n[1] * eps, ring);
   const inward = inside ? n : [-n[0], -n[1]];
   const outward = [-inward[0], -inward[1]];
   return depth % 2 === 0 ? outward : inward;
@@ -306,8 +325,21 @@ function planLines(polys, s, buf, cur, layerIdx) {
   const depths = [...byDepth.keys()].sort((a, b) => b - a);
   const order = [];
   let cx = cur.x, cy = cur.y;
+  const cutOrderOf = p => (p.cut && Number.isFinite(+p.cut.order) ? +p.cut.order : 0);
   for (const d of depths) {
-    const rem = byDepth.get(d).slice();
+    // A cut order number is a sort key over everything, with anything the user
+    // has not numbered sitting at zero. So a positive number means "after the
+    // rest" and a negative one "before" — which is what "cut this one last"
+    // actually needs. Inner shapes still come before the outer ones that
+    // contain them, so a part can never be freed before its own holes are cut.
+    const groups = new Map();
+    for (const p of byDepth.get(d)) {
+      const k = cutOrderOf(p);
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(p);
+    }
+    for (const k of [...groups.keys()].sort((x, y) => x - y)) {
+    const rem = groups.get(k).slice();
     while (rem.length) {
       let best = 0, bestD = Infinity, bestRev = false, bestStart = 0;
       for (let i = 0; i < rem.length; i++) {
@@ -327,15 +359,36 @@ function planLines(polys, s, buf, cur, layerIdx) {
       }
       const p = rem.splice(best, 1)[0];
       let pts = p.pts;
+      // An explicit start corner overrides the nearest-vertex choice: it is
+      // where the pierce mark, and any lead, will land.
+      if (p.closed && p.cut && p.cut.startAt && p.cut.startAt !== 'auto') {
+        const b = p.b || polyBounds(p.pts);
+        const [ax, ay] = anchorPoint({ x: b.x0, y: b.y0, w: b.x1 - b.x0, h: b.y1 - b.y0 }, p.cut.startAt);
+        let bi = 0, bd = Infinity;
+        for (let i = 0; i < pts.length - 1; i++) {
+          const dd = (pts[i][0] - ax) ** 2 + (pts[i][1] - ay) ** 2;
+          if (dd < bd) { bd = dd; bi = i; }
+        }
+        bestStart = bi;
+        bestRev = false;
+      }
       if (p.closed && bestStart > 0) {
         const ring = pts.slice(0, -1);
         pts = ring.slice(bestStart).concat(ring.slice(0, bestStart));
         pts.push(pts[0]);
       }
       if (bestRev) pts = pts.slice().reverse();
+      // Direction only matters to the user: which way round the head travels
+      // changes nothing about where the cut lands, but it changes which side
+      // of the kerf the heat goes into first on some materials.
+      if (p.closed && p.cut && (p.cut.dir === 'cw' || p.cut.dir === 'ccw')) {
+        const wantCw = p.cut.dir === 'cw';
+        if ((signedArea(pts) > 0) !== wantCw) pts = pts.slice().reverse();
+      }
       order.push({ pts, closed: p.closed, tabs: p.tabs, depth: p.depth });
       const last = pts[pts.length - 1];
       cx = last[0]; cy = last[1];
+    }
     }
   }
   const power = s.power / 100;
@@ -748,7 +801,14 @@ export async function buildJob({ onlySelection = false } = {}) {
         if (openCount) warnings.push(`${layer.name}: kerf offset skipped ${openCount} open path(s) — "inside" is undefined for a shape that is not closed.`);
         if (vectors.length < before) warnings.push(`${layer.name}: a shape was too small for a ${kerf} mm kerf offset and was left unchanged.`);
       }
-      const perObject = vectors.map(v => itemPolylines(v, layer.mode === 'line' ? 0.01 : 0.02));
+      const perObject = vectors.map(v => {
+        const ps = itemPolylines(v, layer.mode === 'line' ? 0.01 : 0.02);
+        // Per-object cut control travels with the geometry. The kerf pass
+        // copies item.data onto its offset clones, so this survives it.
+        const cut = v.data && v.data.cut;
+        if (cut) ps.forEach(pp => { pp.cut = cut; });
+        return ps;
+      });
       const polys = perObject.flat();
       if (layer.mode === 'line' && (+layer.tabCount || 0) > 0 && (+layer.tabSize || 0) > 0) {
         const tabs = { count: +layer.tabCount, size: +layer.tabSize };

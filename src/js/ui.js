@@ -407,12 +407,33 @@ function renderObjectTab(body) {
   // per-object override
   const first = lv[0].data.proc || {};
   const ov = { enabled: !!first.enabled, power: first.power ?? getLayer(lv[0].data.layer).power, speed: first.speed ?? getLayer(lv[0].data.layer).speed, passes: first.passes ?? 1 };
-  const applyOv = () => { lv.forEach(i => { i.data.proc = { ...ov }; }); pushHistory(); renderTab(); };
+  const applyOv = () => { lv.forEach(i => { i.data.proc = { ...(i.data.proc || {}), ...ov }; }); pushHistory(); renderTab(); };
   body.append(h('div', { class: 'sec' }, h('div', { class: 'sec-h' }, 'Process override'),
     row('Custom', check(ov.enabled, v => { ov.enabled = v; applyOv(); }, 'Override layer power/speed')),
     ov.enabled ? row('Power', ...num(ov.power, v => { ov.power = v; applyOv(); }, { min: 0, max: 100, unit: '%' })) : null,
     ov.enabled ? row('Speed', ...num(ov.speed, v => { ov.speed = v; applyOv(); }, { min: 1, unit: 'mm/min' })) : null,
     ov.enabled ? row('Passes', ...num(ov.passes, v => { ov.passes = Math.round(v); applyOv(); }, { min: 1, step: 1, unit: '' })) : null));
+
+  // cut control
+  const cut0 = lv[0].data.cut || {};
+  const cut = { order: cut0.order ?? 0, startAt: cut0.startAt || 'auto', dir: cut0.dir || 'auto' };
+  const applyCut = () => { lv.forEach(i => { i.data.cut = { ...cut }; }); pushHistory(); renderTab(); };
+  const startPicker = () => {
+    const wrap = h('div', { class: 'anchor' });
+    for (const a2 of ['tl', 'tc', 'tr', 'ml', 'mc', 'mr', 'bl', 'bc', 'br']) {
+      wrap.appendChild(h('button', { class: cut.startAt === a2 ? 'on' : '', title: a2, onClick: () => { cut.startAt = a2; applyCut(); } }));
+    }
+    return h('div', { style: { display: 'flex', gap: '10px', alignItems: 'center' } }, wrap,
+      h('button', { class: 'btn small' + (cut.startAt === 'auto' ? ' primary' : ''), onClick: () => { cut.startAt = 'auto'; applyCut(); } }, 'Auto'));
+  };
+  body.append(h('div', { class: 'sec' }, h('div', { class: 'sec-h' }, 'Cut control'),
+    row('Cut order', ...num(cut.order, v => { cut.order = Math.round(v); applyCut(); }, { min: -99, max: 99, step: 1, unit: '0 = automatic' })),
+    h('div', { class: 'small muted', style: { margin: '-3px 0 8px 116px' } },
+      'Higher cuts later, lower earlier. Inner shapes always come before the outer ones holding them, whatever the number.'),
+    row('Start at', startPicker()),
+    h('div', { class: 'small muted', style: { margin: '-3px 0 8px 116px' } },
+      'Which corner of the shape the cut begins at — where the pierce mark, and any lead in, will land.'),
+    row('Direction', seg({ auto: 'Auto', cw: 'Clockwise', ccw: 'Anticlockwise' }, cut.dir, v => { cut.dir = v; applyCut(); }))));
 
   // image
   const r = s.length === 1 && s[0].className === 'Raster' ? s[0] : null;

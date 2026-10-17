@@ -79,6 +79,14 @@ export const TOPICS = [
 <p>Only closed shapes get tabs — an open line has nothing to fall out of. If a shape is so small that the bridges would leave less than half its outline actually cut, it is cut normally instead and the job warns you, rather than producing a part that never comes free.</p>
 <p>With several passes, every pass leaves the same bridges in the same places, so a later pass cannot cut through an earlier one's tab.</p>
 
+<h4>Taking over the cut order</h4>
+<p>Crafter Studio works out the order by itself: holes before the part that holds them, then whichever shape is nearest, so the head travels as little as possible. Mostly that is what you want. When it is not, the <b>Object</b> tab has a <b>Cut control</b> section for the selected objects.</p>
+<p><b>Cut order</b> is a number. Everything you have not touched sits at zero, so a positive number means "after the rest" and a negative one "before". Setting one shape to 1 makes it the last thing cut — which is how you keep the piece that holds the sheet together until the end.</p>
+<p>One rule is not negotiable: a hole is always cut before the outline that contains it, whatever numbers you give. Freeing a part before its own holes are cut means cutting those holes in something that has already moved.</p>
+<p><b>Start at</b> chooses which corner of the shape the cut begins at, instead of whichever vertex happens to be nearest. That is where the beam pierces, where the mark lands, and where a lead in attaches — so if you are using leads, this is how you say which side of the part the lead should come from.</p>
+<p><b>Direction</b> forces clockwise or anticlockwise. It changes nothing about where the cut lands; it changes which way the head travels, which on some materials changes which side of the kerf takes the heat first, and which edge of a bevelled cut ends up cleaner.</p>
+<p>All three are stored on the object, not the layer, so different parts on the same layer can be ordered independently. They survive kerf offsetting.</p>
+
 <h4>Dashed lines: perforations, folds and score marks</h4>
 <p>Set <b>Line style</b> to <b>Dashed</b> on a Line layer and the beam cuts for a set distance, skips a set distance, and repeats all the way round. <b>Dash</b> is how far it cuts, <b>Gap</b> how far it skips.</p>
 <p>What that is for:</p>
