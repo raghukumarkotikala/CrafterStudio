@@ -146,6 +146,7 @@ function buildMenu() {
         item('Zoom to Selection', 'view.fitSel', '3', true),
         { type: 'separator' },
         item('Toggle Grid Snap', 'view.snap', '%', true),
+        item('Toggle Dimensions', 'view.dims', 'D', true),
         item('Toggle Toolpath Preview', 'job.preview', 'Alt+P'),
         item('Toggle Camera Overlay', 'view.camera', 'Alt+C'),
         item('Refresh Camera Picture', 'view.cameraRefresh', 'Alt+Shift+C'),

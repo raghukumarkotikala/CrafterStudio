@@ -326,6 +326,67 @@ export function selectionBounds(items = state.selection) {
   return b;
 }
 
+/**
+ * Dimension lines around the selection, in the manner of a CAD drawing: a
+ * measured line standing off each edge with the figure on it.
+ *
+ * Everything is sized in screen pixels divided by the zoom, so the lines,
+ * ticks and lettering stay the same size on screen however far in you are.
+ */
+function addDimensions(g, b, z) {
+  const px = n => n / z;
+  const LINE = '#5b8ed6';
+  const off = px(26);                       // stand-off from the selection
+  const cap = px(4);                        // half-length of the end ticks
+  const ext = px(5);                        // how far past the line the extension runs
+
+  const thin = (from, to, color, alpha) => g.addChild(new paper.Path.Line({
+    from, to, strokeColor: color, opacity: alpha, strokeWidth: 1, strokeScaling: false
+  }));
+
+  const measured = (from, to, text, vertical) => {
+    thin(from, to, LINE, 1);
+    const capV = vertical ? new paper.Point(cap, 0) : new paper.Point(0, cap);
+    thin(from.subtract(capV), from.add(capV), LINE, 1);
+    thin(to.subtract(capV), to.add(capV), LINE, 1);
+
+    const mid = from.add(to).divide(2);
+    const t = new paper.PointText({
+      point: new paper.Point(mid.x, mid.y + px(4)),
+      content: text, fillColor: '#15202e', justification: 'center',
+      fontFamily: 'sans-serif', fontSize: px(11)
+    });
+    // A badge behind the figure, because the line runs over the white bed in
+    // one place and the dark surround in another.
+    const bg = new paper.Path.Rectangle({
+      rectangle: t.bounds.expand(px(9), px(5)), radius: px(3),
+      fillColor: 'rgba(255,255,255,0.94)', strokeColor: LINE,
+      strokeWidth: 1, strokeScaling: false
+    });
+    bg.insertBelow(t);
+    g.addChild(bg);
+    g.addChild(t);
+  };
+
+  if (b.width > 1e-6) {
+    const y = b.bottom + off;
+    thin(new paper.Point(b.left, b.bottom), new paper.Point(b.left, y + ext), LINE, 0.4);
+    thin(new paper.Point(b.right, b.bottom), new paper.Point(b.right, y + ext), LINE, 0.4);
+    measured(new paper.Point(b.left, y), new paper.Point(b.right, y), `${fmtMm(b.width)} mm`, false);
+  }
+  if (b.height > 1e-6) {
+    const x = b.right + off;
+    thin(new paper.Point(b.right, b.top), new paper.Point(x + ext, b.top), LINE, 0.4);
+    thin(new paper.Point(b.right, b.bottom), new paper.Point(x + ext, b.bottom), LINE, 0.4);
+    measured(new paper.Point(x, b.top), new paper.Point(x, b.bottom), `${fmtMm(b.height)} mm`, true);
+  }
+}
+
+// Two decimals, but without trailing zeros: 40 reads better than 40.00.
+function fmtMm(v) {
+  return String(Math.round(v * 100) / 100);
+}
+
 export function updateSelectionBox() {
   if (ed.selBox) { ed.selBox.remove(); ed.selBox = null; }
   state.selection = state.selection.filter(i => i.parent);
@@ -350,6 +411,7 @@ export function updateSelectionBox() {
   const rot = new paper.Path.Circle({ center: rp, radius: hs * 0.65, fillColor: '#3d8bfd', strokeColor: '#ffffff', strokeWidth: 1.2, strokeScaling: false });
   rot.data.handle = 'rot';
   g.addChild(rot);
+  if (state.prefs.dims !== false) addDimensions(g, b, z);
   ed.selBox = g;
   ed.design.activate();
   paper.view.requestUpdate();

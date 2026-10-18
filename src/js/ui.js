@@ -715,6 +715,7 @@ function renderStatus() {
     h('span', { id: 'st-job' }),
     h('span', {}, 'Machine: ', h('b', { id: 'st-machine' }, machine.connected ? machine.status.state : 'Offline')),
     h('span', { class: 'toggle' + (state.prefs.snap ? ' on' : ''), title: 'Snap to grid (%)', onClick: () => run('view.snap') }, `Snap ${state.prefs.snapStep} mm`),
+    h('span', { class: 'toggle' + (state.prefs.dims !== false ? ' on' : ''), title: 'Dimension lines on the selection (D)', onClick: () => run('view.dims') }, 'Dims'),
     h('span', { id: 'st-measure', hidden: true, style: { color: 'var(--warn)' } }),
     h('span', { id: 'st-vars', class: 'toggle', hidden: true, title: 'Variable text — click to open', onClick: () => run('obj.variableText') }),
     h('span', { id: 'st-camera', class: 'toggle on', hidden: true, title: 'Camera overlay is on — click to turn it off', onClick: () => run('view.camera') }, 'Camera'),

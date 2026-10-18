@@ -1,6 +1,6 @@
 // Central command registry used by menus, toolbar buttons, context menu and keyboard.
 import { state, persistPrefs, bus } from './state.js';
-import { undo, redo, zoomAt, fitWorkArea, fitSelection, clearSelection } from './editor.js';
+import { undo, redo, zoomAt, fitWorkArea, fitSelection, clearSelection, updateSelectionBox as editorBox } from './editor.js';
 import * as ops from './ops.js';
 import * as io from './io.js';
 import * as dlg from './dialogs.js';
@@ -68,6 +68,10 @@ export const cmds = {
   'view.fit': fitWorkArea,
   'view.fitSel': fitSelection,
   'view.snap': () => { state.prefs.snap = !state.prefs.snap; persistPrefs(); bus.emit('prefs'); },
+  'view.dims': () => {
+    state.prefs.dims = state.prefs.dims === false;
+    persistPrefs(); bus.emit('prefs'); editorBox();
+  },
 
   'machine.profile': () => dlg.openProfileDialog(),
   'machine.connect': jobs.toggleConnect,

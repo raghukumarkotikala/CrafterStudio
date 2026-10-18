@@ -66,6 +66,7 @@ export const state = {
   userMaterials: loadJSON('crafter.userMaterials', []),
   prefs: {
     snap: false,
+    dims: true,
     snapStep: 1,
     gridStep: 10,
     alignTo: 'selection',

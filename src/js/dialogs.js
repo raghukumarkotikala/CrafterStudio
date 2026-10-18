@@ -867,7 +867,7 @@ export function openShortcuts() {
     ['Arrows', 'Nudge 1 mm (Shift 10 mm, Alt 0.1 mm)'], ['Shift while dragging', 'Constrain / keep proportions off'],
     ['Alt + drag', 'Duplicate while moving'], ['Double-click', 'Edit text / nodes'], ['Home / End / PgUp / PgDn', 'Arrange'],
     ['Alt+P', 'Toolpath preview'], ['Alt+C', 'Camera overlay on / off'], ['Alt+Shift+C', 'Take a new camera picture'],
-    ['F7', 'Check the drawing'],
+    ['F7', 'Check the drawing'], ['D', 'Dimension lines on / off'],
     ['F5', 'Start job'], ['%', 'Toggle snap to grid']
   ];
   openModal({
