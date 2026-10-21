@@ -115,8 +115,8 @@ ${items.length ? items.map(card).join('\n') : empty}
 <section class="alt">
   <div class="wrap">
     <h2>Made something?</h2>
-    <p class="sub">This page starts with the designs that ship inside the app. If you have cut or engraved something with Crafter Studio, post a photo in Show and tell on GitHub — the good ones go up here, with your name on them.</p>
-    <p><a class="btn primary" href="https://github.com/raghukumarkotikala/CrafterStudio/discussions">Show what you made</a></p>
+    <p class="sub">This page starts with the designs that ship inside the app. If you have cut or engraved something with Crafter Studio, post a photo in <b>Show and tell</b> on GitHub — the good ones go up here, with your name on them. Say what machine, material and settings you used; that is the part other people need.</p>
+    <p><a class="btn primary" href="https://github.com/raghukumarkotikala/CrafterStudio/discussions/categories/show-and-tell">Show what you made</a></p>
   </div>
 </section>
 
