@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gallery — Crafter Studio</title>
+<meta name="description" content="Ready-to-cut designs for Crafter Studio, free to download and use. Mandalas, Indian motifs, frames, festival designs and patterns.">
+<link rel="icon" href="assets/favicon-64.png">
+<style>
+
+  :root{
+    --bg:#17191e; --panel:#1f2228; --panel-2:#262a31; --line:#353a44;
+    --text:#e3e6eb; --muted:#9aa2af; --dim:#6d7583;
+    --accent:#3d8bfd; --accent-2:#2f6fd0; --good:#33c173; --warn:#f0a52a; --bad:#ef4c5d;
+    --radius:10px; --wrap:1100px;
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font:16px/1.6 "Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--accent); text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:var(--wrap); margin:0 auto; padding:0 20px}
+
+  /* ---------- header ---------- */
+  header{position:sticky; top:0; z-index:10; background:rgba(23,25,30,.86);
+    backdrop-filter:blur(8px); border-bottom:1px solid var(--line)}
+  .bar{display:flex; align-items:center; gap:20px; height:62px}
+  /* The wordmark is dark blue on white; on the dark header it keeps its own
+     plate because that blue reads 1.5:1 against the background without it. */
+  .brandmark{display:flex; align-items:center; gap:8px; background:#fff;
+    border-radius:9px; padding:6px 12px}
+  .brandmark img{height:32px; width:auto; display:block}
+  .brandmark span{font-size:19px; font-weight:650; color:#0030a8; letter-spacing:.2px}
+  nav{margin-left:auto; display:flex; gap:22px; align-items:center; flex-wrap:wrap}
+  nav a{color:var(--muted); font-size:14.5px; font-weight:600}
+  nav a:hover{color:var(--text); text-decoration:none}
+
+  /* ---------- hero ---------- */
+  .hero{padding:72px 0 8px; text-align:center}
+  h1{font-size:clamp(30px,5vw,50px); line-height:1.12; margin:0 0 18px; letter-spacing:-.02em}
+  h1 .acc{color:var(--accent)}
+  .lede{font-size:clamp(16px,2.1vw,19.5px); color:var(--muted); max-width:680px; margin:0 auto 28px}
+  .cta{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-bottom:14px}
+  .btn{display:inline-flex; align-items:center; gap:9px; padding:12px 22px; border-radius:var(--radius);
+    font-weight:650; font-size:15px; border:1px solid var(--line); background:var(--panel-2); color:var(--text)}
+  .btn:hover{background:var(--panel); text-decoration:none; border-color:var(--dim)}
+  .btn.primary{background:var(--accent); border-color:var(--accent); color:#fff}
+  .btn.primary:hover{background:var(--accent-2); border-color:var(--accent-2)}
+  .meta{color:var(--dim); font-size:13.5px}
+  .meta b{color:var(--muted); font-weight:600}
+
+  /* ---------- shot ---------- */
+  .shot{margin:40px auto 0; max-width:1000px; padding:0 20px}
+  .shot img{width:100%; height:auto; display:block; border:1px solid var(--line);
+    border-radius:12px; box-shadow:0 24px 70px rgba(0,0,0,.55)}
+  .caption{text-align:center; color:var(--dim); font-size:13px; margin-top:12px}
+
+  /* ---------- sections ---------- */
+  section{padding:68px 0}
+  h2{font-size:clamp(23px,3.2vw,31px); margin:0 0 10px; letter-spacing:-.01em}
+  .sub{color:var(--muted); margin:0 0 34px; max-width:700px}
+
+  .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(265px,1fr)); gap:16px}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:20px 20px 22px}
+  .card h3{margin:0 0 8px; font-size:16.5px; display:flex; align-items:center; gap:9px}
+  .card p{margin:0; color:var(--muted); font-size:14.5px}
+  .ic{width:22px; height:22px; flex:none; color:var(--accent)}
+
+  .alt{background:var(--panel)}
+  .alt .card{background:var(--panel-2)}
+
+  /* ---------- ai ---------- */
+  .ai-list{display:grid; gap:12px; margin:0 0 22px; padding:0; list-style:none}
+  .ai-list li{background:var(--panel-2); border:1px solid var(--line); border-radius:var(--radius); padding:15px 18px}
+  .ai-list b{display:block; margin-bottom:3px}
+  .ai-list span{color:var(--muted); font-size:14.5px}
+  .pill{display:inline-block; font-size:11.5px; font-weight:700; letter-spacing:.4px; text-transform:uppercase;
+    padding:3px 9px; border-radius:20px; background:#2d3b58; color:#9cc0ff; margin-bottom:14px}
+
+  /* ---------- download ---------- */
+  .dl{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; margin-bottom:22px}
+  .dl .card{display:flex; flex-direction:column; gap:12px}
+  .dl .btn{justify-content:center; margin-top:auto}
+  .req{color:var(--dim); font-size:13.5px; margin:0}
+
+  /* ---------- support ---------- */
+  .support{text-align:center}
+  .support .sub{margin-left:auto; margin-right:auto; margin-bottom:16px}
+  .support .note{text-align:left}
+  .kofi{padding:14px 26px; font-size:16px}
+  .kofi svg{width:21px; height:21px}
+
+  /* ---------- notices ---------- */
+  .note{border:1px solid var(--line); background:var(--panel-2); border-radius:var(--radius);
+    padding:16px 18px; color:var(--muted); font-size:14.5px}
+  .note.warn{border-color:#6a5220; background:#2b2518; color:#f3c877}
+  .note.warn b{color:#ffd98a}
+  .card p.small{font-size:13px; color:var(--dim); margin-top:10px}
+  .card code{background:var(--panel-2); border:1px solid var(--line); border-radius:5px;
+    padding:1px 5px; font-size:12.5px; white-space:nowrap}
+
+  /* ---------- footer ---------- */
+  footer{border-top:1px solid var(--line); padding:34px 0 46px; color:var(--dim); font-size:13.5px}
+  .fgrid{display:flex; gap:28px; flex-wrap:wrap; justify-content:space-between}
+  footer a{color:var(--muted)}
+  footer p{margin:0 0 8px; max-width:620px}
+
+  @media (max-width:640px){
+    .bar{height:auto; padding:12px 0; flex-wrap:wrap; gap:12px}
+    nav{margin-left:0; width:100%; gap:16px}
+    section{padding:52px 0}
+    .hero{padding:48px 0 0}
+  }
+
+  /* ---------- gallery ---------- */
+  .pieces{display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:22px; margin-top:26px}
+  .piece{margin:0; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; display:flex; flex-direction:column}
+  .piece .shot{display:block; background:#f6f7f9; aspect-ratio:1/1; display:grid; place-items:center; padding:18px}
+  .piece img{max-width:100%; max-height:100%; display:block}
+  .piece img.vec{width:82%; height:82%; object-fit:contain}
+  .piece figcaption{padding:16px 18px 18px; display:flex; flex-direction:column; gap:7px}
+  .piece h3{margin:0; font-size:16.5px}
+  .piece p{margin:0; font-size:14px; color:var(--muted)}
+  .piece p.meta{font-size:12.5px; color:var(--dim)}
+  .tag{display:inline-block; border:1px solid var(--line); border-radius:99px; padding:2px 9px; margin-right:5px; font-size:11.5px}
+  .tag.made{border-color:var(--accent); color:var(--accent)}
+  .piece .btn{align-self:flex-start; margin-top:4px}
+  .cats{display:flex; flex-wrap:wrap; gap:8px; margin-top:18px}
+  .cats .tag{font-size:12.5px; padding:4px 11px}
+</style>
+</head>
+<body>
+<a id="top"></a>
+<header>
+  <div class="wrap bar">
+    <div class="brandmark">
+      <img src="assets/wordmark.png" alt="Crafter">
+      <span>Studio</span>
+    </div>
+    <nav>
+      <a href="./#features">Features</a>
+      <a href="gallery.html">Gallery</a>
+      <a href="./#ai">AI</a>
+      <a href="guide.html">Guide</a>
+      <a href="./#download">Download</a>
+      <a href="./#support">Donate</a>
+      <a href="https://github.com/raghukumarkotikala/CrafterStudio">Source</a>
+    </nav>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <h1>Gallery</h1>
+    <p class="sub">Designs that cut as they are. Download the SVG, open it in Crafter Studio, set a layer and go. Everything here is free to use, including for work you sell.</p>
+    <div class="cats"><span class="tag">Mandalas</span><span class="tag">Indian motifs</span><span class="tag">Frames &amp; borders</span><span class="tag">Nature</span><span class="tag">Celebration</span><span class="tag">Badges &amp; labels</span><span class="tag">Festivals</span><span class="tag">Patterns</span></div>
+    <div class="pieces">
+      <figure class="piece">
+        <a class="shot" href="gallery/files/art-mandalas-mandala-flower.svg" download>
+          <img src="gallery/files/art-mandalas-mandala-flower.svg" alt="Mandala flower" loading="lazy" class="vec">
+        </a>
+        <figcaption>
+          <h3>Mandala flower</h3>
+          <p class="meta">Mandalas · 100 × 100 mm · Line layer</p>
+          <p>Cut or score on a Line layer. Scale it to whatever you need — it is vector, so it stays sharp.</p>
+          <p class="meta"><span class="tag">Ships with the app</span> <span class="tag">ISC — use it for anything, including work you sell</span></p>
+          <a class="btn small" href="gallery/files/art-mandalas-mandala-flower.svg" download>Download SVG</a>
+        </figcaption>
+      </figure>
+      <figure class="piece">
+        <a class="shot" href="gallery/files/art-mandalas-mandala-star.svg" download>
+          <img src="gallery/files/art-mandalas-mandala-star.svg" alt="Mandala star" loading="lazy" class="vec">
+        </a>
+        <figcaption>
+          <h3>Mandala star</h3>
+          <p class="meta">Mandalas · 100 × 100 mm · Line layer</p>
+          <p>Cut or score on a Line layer. Scale it to whatever you need — it is vector, so it stays sharp.</p>
+          <p class="meta"><span class="tag">Ships with the app</span> <span class="tag">ISC — use it for anything, including work you sell</span></p>
+          <a class="btn small" href="gallery/files/art-mandalas-mandala-star.svg" download>Download SVG</a>
+        </figcaption>
+      </figure>
+      <figure class="piece">
+        <a class="shot" href="gallery/files/art-indian-motifs-lotus.svg" download>
+          <img src="gallery/files/art-indian-motifs-lotus.svg" alt="Lotus" loading="lazy" class="vec">
+        </a>
+        <figcaption>
+          <h3>Lotus</h3>
+          <p class="meta">Indian motifs · 100 × 100 mm · Fill layer</p>
+          <p>Engrave on a Fill layer, or put it on a Line layer to cut the outline only.</p>
+          <p class="meta"><span class="tag">Ships with the app</span> <span class="tag">ISC — use it for anything, including work you sell</span></p>
+          <a class="btn small" href="gallery/files/art-indian-motifs-lotus.svg" download>Download SVG</a>
+        </figcaption>
+      </figure>
+      <figure class="piece">
+        <a class="shot" href="gallery/files/art-indian-motifs-lotus-outline.svg" download>
+          <img src="gallery/files/art-indian-motifs-lotus-outline.svg" alt="Lotus outline" loading="lazy" class="vec">
+        </a>
+        <figcaption>
+          <h3>Lotus outline</h3>
+          <p class="meta">Indian motifs · 100 × 100 mm · Line layer</p>
+          <p>Cut or score on a Line layer. Scale it to whatever you need — it is vector, so it stays sharp.</p>
+          <p class="meta"><span class="tag">Ships with the app</span> <span class="tag">ISC — use it for anything, including work you sell</span></p>
+          <a class="btn small" href="gallery/files/art-indian-motifs-lotus-outline.svg" download>Download SVG</a>
+        </figcaption>
+      </figure>
+      <figure class="piece">
+        <a class="shot" href="gallery/files/art-frames-borders-frame.svg" download>
+          <img src="gallery/files/art-frames-borders-frame.svg" alt="Frame" loading="lazy" class="vec">
+        </a>
+        <figcaption>
+          <h3>Frame</h3>
+          <p class="meta">Frames &amp; borders · 100 × 100 mm · Fill layer</p>
+          <p>Engrave on a Fill layer, or put it on a Line layer to cut the outline only.</p>
+          <p class="meta"><span class="tag">Ships with the app</span> <span class="tag">ISC — use it for anything, including work you sell</span></p>
+          <a class="btn small" href="gallery/files/art-frames-borders-frame.svg" download>Download SVG</a>
+        </figcaption>
+      </figure>
+      <figure class="piece">
+        <a class="shot" href="gallery/files/art-frames-borders-rounded-frame.svg" download>
+          <img src="gallery/files/art-frames-borders-rounded-frame.svg" alt="Rounded frame" loading="lazy" class="vec">
+        </a>
+        <figcaption>
+          <h3>Rounded frame</h3>
+          <p class="meta">Frames &amp; borders · 100 × 100 mm · Fill layer</p>
+          <p>Engrave on a Fill layer, or put it on a Line layer to cut the outline only.</p>
+          <p class="meta"><span class="tag">Ships with the app</span> <span class="tag">ISC — use it for anything, including work you sell</span></p>
+          <a class="btn small" href="gallery/files/art-frames-borders-rounded-frame.svg" download>Download SVG</a>
+        </figcaption>
+      </figure>
+      <figure class="piece">
+        <a class="shot" href="gallery/files/art-nature-leaf.svg" download>
+          <img src="gallery/files/art-nature-leaf.svg" alt="Leaf" loading="lazy" class="vec">
+        </a>
+        <figcaption>
+          <h3>Leaf</h3>
+          <p class="meta">Nature · 100 × 100 mm · Fill layer</p>
+          <p>Engrave on a Fill layer, or put it on a Line layer to cut the outline only.</p>
+          <p class="meta"><span class="tag">Ships with the app</span> <span class="tag">ISC — use it for anything, including work you sell</span></p>
+          <a class="btn small" href="gallery/files/art-nature-leaf.svg" download>Download SVG</a>
+        </figcaption>
+      </figure>
+      <figure class="piece">
+        <a class="shot" href="gallery/files/art-nature-branch.svg" download>
+          <img src="gallery/files/art-nature-branch.svg" alt="Branch" loading="lazy" class="vec">
+        </a>
+        <figcaption>
+          <h3>Branch</h3>
+          <p class="meta">Nature · 100 × 100 mm · Fill layer</p>
+          <p>Engrave on a Fill layer, or put it on a Line layer to cut the outline only.</p>
+          <p class="meta"><span class="tag">Ships with the app</span> <span class="tag">ISC — use it for anything, including work you sell</span></p>
+          <a class="btn small" href="gallery/files/art-nature-branch.svg" download>Download SVG</a>
+        </figcaption>
+      </figure>
+      <figure class="piece">
+        <a class="shot" href="gallery/files/art-celebration-two-hearts.svg" download>
+          <img src="gallery/files/art-celebration-two-hearts.svg" alt="Two hearts" loading="lazy" class="vec">
+        </a>
+        <figcaption>
+          <h3>Two hearts</h3>
+          <p class="meta">Celebration · 100 × 100 mm · Fill layer</p>
+          <p>Engrave on a Fill layer, or put it on a Line layer to cut the outline only.</p>
+          <p class="meta"><span class="tag">Ships with the app</span> <span class="tag">ISC — use it for anything, including work you sell</span></p>
+          <a class="btn small" href="gallery/files/art-celebration-two-hearts.svg" download>Download SVG</a>
+        </figcaption>
+      </figure>
+      <figure class="piece">
+        <a class="shot" href="gallery/files/art-celebration-heart-outline.svg" download>
+          <img src="gallery/files/art-celebration-heart-outline.svg" alt="Heart outline" loading="lazy" class="vec">
+        </a>
+        <figcaption>
+          <h3>Heart outline</h3>
+          <p class="meta">Celebration · 100 × 100 mm · Fill layer</p>
+          <p>Engrave on a Fill layer, or put it on a Line layer to cut the outline only.</p>
+          <p class="meta"><span class="tag">Ships with the app</span> <span class="tag">ISC — use it for anything, including work you sell</span></p>
+          <a class="btn small" href="gallery/files/art-celebration-heart-outline.svg" download>Download SVG</a>
+        </figcaption>
+      </figure>
+      <figure class="piece">
+        <a class="shot" href="gallery/files/art-badges-labels-round-badge.svg" download>
+          <img src="gallery/files/art-badges-labels-round-badge.svg" alt="Round badge" loading="lazy" class="vec">
+        </a>
+        <figcaption>
+          <h3>Round badge</h3>
+          <p class="meta">Badges &amp; labels · 100 × 100 mm · Line layer</p>
+          <p>Cut or score on a Line layer. Scale it to whatever you need — it is vector, so it stays sharp.</p>
+          <p class="meta"><span class="tag">Ships with the app</span> <span class="tag">ISC — use it for anything, including work you sell</span></p>
+          <a class="btn small" href="gallery/files/art-badges-labels-round-badge.svg" download>Download SVG</a>
+        </figcaption>
+      </figure>
+      <figure class="piece">
+        <a class="shot" href="gallery/files/art-badges-labels-seal.svg" download>
+          <img src="gallery/files/art-badges-labels-seal.svg" alt="Seal" loading="lazy" class="vec">
+        </a>
+        <figcaption>
+          <h3>Seal</h3>
+          <p class="meta">Badges &amp; labels · 100 × 100 mm · Fill layer</p>
+          <p>Engrave on a Fill layer, or put it on a Line layer to cut the outline only.</p>
+          <p class="meta"><span class="tag">Ships with the app</span> <span class="tag">ISC — use it for anything, including work you sell</span></p>
+          <a class="btn small" href="gallery/files/art-badges-labels-seal.svg" download>Download SVG</a>
+        </figcaption>
+      </figure>
+      <figure class="piece">
+        <a class="shot" href="gallery/files/art-festivals-diya-row.svg" download>
+          <img src="gallery/files/art-festivals-diya-row.svg" alt="Diya row" loading="lazy" class="vec">
+        </a>
+        <figcaption>
+          <h3>Diya row</h3>
+          <p class="meta">Festivals · 100 × 100 mm · Fill layer</p>
+          <p>Engrave on a Fill layer, or put it on a Line layer to cut the outline only.</p>
+          <p class="meta"><span class="tag">Ships with the app</span> <span class="tag">ISC — use it for anything, including work you sell</span></p>
+          <a class="btn small" href="gallery/files/art-festivals-diya-row.svg" download>Download SVG</a>
+        </figcaption>
+      </figure>
+      <figure class="piece">
+        <a class="shot" href="gallery/files/art-festivals-diwali-lantern.svg" download>
+          <img src="gallery/files/art-festivals-diwali-lantern.svg" alt="Diwali lantern" loading="lazy" class="vec">
+        </a>
+        <figcaption>
+          <h3>Diwali lantern</h3>
+          <p class="meta">Festivals · 100 × 100 mm · Fill layer</p>
+          <p>Engrave on a Fill layer, or put it on a Line layer to cut the outline only.</p>
+          <p class="meta"><span class="tag">Ships with the app</span> <span class="tag">ISC — use it for anything, including work you sell</span></p>
+          <a class="btn small" href="gallery/files/art-festivals-diwali-lantern.svg" download>Download SVG</a>
+        </figcaption>
+      </figure>
+      <figure class="piece">
+        <a class="shot" href="gallery/files/art-patterns-honeycomb.svg" download>
+          <img src="gallery/files/art-patterns-honeycomb.svg" alt="Honeycomb" loading="lazy" class="vec">
+        </a>
+        <figcaption>
+          <h3>Honeycomb</h3>
+          <p class="meta">Patterns · 100 × 100 mm · Line layer</p>
+          <p>Cut or score on a Line layer. Scale it to whatever you need — it is vector, so it stays sharp.</p>
+          <p class="meta"><span class="tag">Ships with the app</span> <span class="tag">ISC — use it for anything, including work you sell</span></p>
+          <a class="btn small" href="gallery/files/art-patterns-honeycomb.svg" download>Download SVG</a>
+        </figcaption>
+      </figure>
+      <figure class="piece">
+        <a class="shot" href="gallery/files/art-patterns-dot-grid.svg" download>
+          <img src="gallery/files/art-patterns-dot-grid.svg" alt="Dot grid" loading="lazy" class="vec">
+        </a>
+        <figcaption>
+          <h3>Dot grid</h3>
+          <p class="meta">Patterns · 100 × 100 mm · Fill layer</p>
+          <p>Engrave on a Fill layer, or put it on a Line layer to cut the outline only.</p>
+          <p class="meta"><span class="tag">Ships with the app</span> <span class="tag">ISC — use it for anything, including work you sell</span></p>
+          <a class="btn small" href="gallery/files/art-patterns-dot-grid.svg" download>Download SVG</a>
+        </figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="wrap">
+    <h2>Made something?</h2>
+    <p class="sub">This page starts with the designs that ship inside the app. If you have cut or engraved something with Crafter Studio, post a photo in Show and tell on GitHub — the good ones go up here, with your name on them.</p>
+    <p><a class="btn primary" href="https://github.com/raghukumarkotikala/CrafterStudio/discussions">Show what you made</a></p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap fgrid">
+    <div>
+      <p><b>Crafter Studio</b> — laser engraving &amp; cutting design and control studio.</p>
+      <p>Released under the ISC licence with no warranty. Built with Electron, paper.js, opentype.js,
+         dxf-parser and imagetracerjs. Icons from Tabler Icons (MIT) and Material Design Icons (Apache-2.0).</p>
+      <p>Machine brand and model names identify compatible hardware only. Crafter Studio is not affiliated with,
+         or endorsed by, any machine manufacturer.</p>
+    </div>
+    <div>
+      <p><a href="https://github.com/raghukumarkotikala/CrafterStudio">GitHub</a></p>
+      <p><a href="https://github.com/raghukumarkotikala/CrafterStudio/releases">Releases</a></p>
+      <p><a href="guide.html">Guide</a></p>
+      <p><a href="https://github.com/raghukumarkotikala/CrafterStudio/issues">Report an issue</a></p>
+      <p><a href="./#support">Donate</a></p>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

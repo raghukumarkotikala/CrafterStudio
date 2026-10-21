@@ -17,7 +17,8 @@
     "dist": "npm run library && npm run strokefonts && npm run guide && electron-builder --win --x64",
     "dist:linux": "npm run library && npm run strokefonts && npm run guide && electron-builder --linux AppImage deb --x64",
     "dist:all": "npm run library && npm run strokefonts && npm run guide && electron-builder --win --linux --x64",
-    "dist:dir": "electron-builder --dir"
+    "dist:dir": "electron-builder --dir",
+    "gallery": "node --no-warnings scripts/build-gallery.mjs"
   },
   "author": "Crafter Studio",
   "homepage": "https://crafterstudio.in",
